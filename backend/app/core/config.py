@@ -13,9 +13,12 @@ class Settings(BaseSettings):
     SUPABASE_KEY: str = ""  # anon or service_role key
     SUPABASE_SERVICE_ROLE_KEY: str = ""
     
-    # Gemini AI
+    # AI Providers (Groq & Gemini)
+    GROQ_API_KEY: str = ""
+    GROQ_MODEL: str = "llama-3.3-70b-versatile"
     GEMINI_API_KEY: str = ""
-    GEMINI_MODEL: str = "gemini-3.7-flash"
+    GEMINI_MODEL: str = "gemini-2.0-flash"
+
 
 
 

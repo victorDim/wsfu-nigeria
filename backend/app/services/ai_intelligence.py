@@ -1,8 +1,9 @@
 """
-Authentic, Human-Centered Nigerian Civic & International Intelligence Engine powered by Google Gemini.
+Authentic, Human-Centered Nigerian Civic & International Intelligence Engine.
+Primary Inference: Groq AI (Llama 3.3 70B Versatile / Llama 3.1 70B) for lightning-fast, brilliant reasoning.
+Secondary Inference: Google Gemini (Gemini 2.0 Flash / 1.5 Flash).
 Encyclopedic knowledge on Nigerian governance, citizen welfare, macroeconomic policy,
 and global foreign relations (ECOWAS, African Union, AfCFTA, UN, bilateral diplomacy, diaspora affairs).
-Provides direct, uncluttered conversational answers — links & citations provided only when requested.
 """
 
 import json
@@ -11,9 +12,20 @@ import logging
 from typing import Dict, Any, List, Optional
 from google import genai
 from google.genai import types
+from groq import Groq
 from app.core.config import settings
 
 logger = logging.getLogger("wsfu.ai_intelligence")
+
+
+def _get_groq_client():
+    """Returns initialized Groq client if key is configured."""
+    if settings.GROQ_API_KEY:
+        try:
+            return Groq(api_key=settings.GROQ_API_KEY)
+        except Exception as e:
+            logger.error(f"Failed to initialize Groq client: {e}")
+    return None
 
 
 def _get_genai_client():
@@ -26,45 +38,52 @@ def _get_genai_client():
     return None
 
 
-def _sync_generate_text(prompt: str) -> Optional[str]:
-    """Helper to generate text using Gemini client with multi-model fallback resiliency."""
-    client = _get_genai_client()
+def _sync_generate_text_groq(system_instruction: str, user_prompt: str, chat_history: Optional[List[Dict[str, str]]] = None) -> Optional[str]:
+    """Generates text using Groq with multi-turn message history and Llama 3.3 70B."""
+    client = _get_groq_client()
     if not client:
         return None
 
-    # Try configured model, followed by verified stable models in Google AI Studio
-    candidates = [
-        settings.GEMINI_MODEL,
-        "gemini-2.0-flash",
-        "gemini-1.5-flash",
-        "gemini-2.5-flash",
-        "gemini-2.0-flash-exp"
+    messages = [{"role": "system", "content": system_instruction}]
+
+    if chat_history and len(chat_history) > 0:
+        for item in chat_history[-6:]:
+            role = "user" if item.get("sender") == "user" or item.get("role") == "user" else "assistant"
+            messages.append({"role": role, "content": item.get("text", "")})
+
+    messages.append({"role": "user", "content": user_prompt})
+
+    candidate_models = [
+        settings.GROQ_MODEL,
+        "llama-3.3-70b-versatile",
+        "llama-3.1-70b-versatile",
+        "mixtral-8x7b-32768",
+        "llama-3.1-8b-instant"
     ]
     seen = set()
-    models_to_try = [m for m in candidates if m and not (m in seen or seen.add(m))]
+    models_to_try = [m for m in candidate_models if m and not (m in seen or seen.add(m))]
 
     for model in models_to_try:
         try:
-            response = client.models.generate_content(
+            completion = client.chat.completions.create(
                 model=model,
-                contents=prompt,
-                config=types.GenerateContentConfig(
-                    max_output_tokens=1500,
-                    temperature=0.4
-                )
+                messages=messages,
+                temperature=0.5,
+                max_tokens=1500,
+                top_p=0.95
             )
-            if response and response.text:
-                logger.info(f"Successfully generated civic AI response using model: {model}")
-                return response.text
+            if completion and completion.choices and completion.choices[0].message.content:
+                logger.info(f"Successfully generated civic AI response via Groq with model: {model}")
+                return completion.choices[0].message.content
         except Exception as e:
-            logger.warning(f"Failed to generate with model '{model}': {e}. Trying next candidate...")
+            logger.warning(f"Groq generation failed with model '{model}': {e}. Trying fallback...")
             continue
 
     return None
 
 
-def _sync_generate_json(prompt: str) -> Optional[str]:
-    """Helper to generate JSON structured output with multi-model fallback."""
+def _sync_generate_text_gemini(prompt: str) -> Optional[str]:
+    """Fallback text generation using Google Gemini."""
     client = _get_genai_client()
     if not client:
         return None
@@ -84,98 +103,119 @@ def _sync_generate_json(prompt: str) -> Optional[str]:
                 model=model,
                 contents=prompt,
                 config=types.GenerateContentConfig(
-                    response_mime_type="application/json",
-                    max_output_tokens=1000,
-                    temperature=0.2
+                    max_output_tokens=1500,
+                    temperature=0.4
                 )
             )
             if response and response.text:
+                logger.info(f"Successfully generated civic AI response via Gemini with model: {model}")
                 return response.text
         except Exception as e:
-            logger.warning(f"Failed to generate JSON with model '{model}': {e}. Trying next...")
+            logger.warning(f"Gemini generation failed with model '{model}': {e}. Trying fallback...")
             continue
 
     return None
 
 
+def _sync_generate_json_groq(system_prompt: str, user_prompt: str) -> Optional[str]:
+    """Generates structured JSON using Groq."""
+    client = _get_groq_client()
+    if not client:
+        return None
+
+    candidate_models = [
+        settings.GROQ_MODEL,
+        "llama-3.3-70b-versatile",
+        "llama-3.1-70b-versatile",
+        "mixtral-8x7b-32768",
+        "llama-3.1-8b-instant"
+    ]
+    seen = set()
+    models_to_try = [m for m in candidate_models if m and not (m in seen or seen.add(m))]
+
+    for model in models_to_try:
+        try:
+            completion = client.chat.completions.create(
+                model=model,
+                messages=[
+                    {"role": "system", "content": system_prompt + "\nReturn valid JSON only."},
+                    {"role": "user", "content": user_prompt}
+                ],
+                response_format={"type": "json_object"},
+                temperature=0.1,
+                max_tokens=1000
+            )
+            if completion and completion.choices and completion.choices[0].message.content:
+                return completion.choices[0].message.content
+        except Exception as e:
+            logger.warning(f"Groq JSON generation failed with model '{model}': {e}. Trying next...")
+            continue
+
+    return None
+
+
+def _sync_generate_json_gemini(prompt: str) -> Optional[str]:
+    """Fallback JSON generation using Gemini."""
+    client = _get_genai_client()
+    if not client:
+        return None
+
+    candidates = ["gemini-2.0-flash", "gemini-1.5-flash"]
+    for model in candidates:
+        try:
+            response = client.models.generate_content(
+                model=model,
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json",
+                    max_output_tokens=1000,
+                    temperature=0.1
+                )
+            )
+            if response and response.text:
+                return response.text
+        except Exception:
+            continue
+    return None
+
+
 def _get_verified_links_for_query(query: str) -> List[Dict[str, str]]:
-    """Returns curated verified Nigerian governance and international relations links ONLY when requested."""
+    """Returns curated verified Nigerian governance links ONLY when explicitly requested."""
     upper = query.upper()
-    
-    # Check if user explicitly asked for links or sources
     is_link_requested = any(k in upper for k in ['LINK', 'SOURCE', 'PORTAL', 'WEBSITE', 'URL', 'READ MORE', 'REFERENCE', 'DOCUMENT', 'GAZETTE', 'CITATION', 'WHERE CAN I'])
     if not is_link_requested:
         return []
 
     links = []
-
-    # International Relations, Foreign Policy, ECOWAS, AU, Diaspora, Global Affairs
     if any(k in upper for k in ['INTERNATIONAL', 'FOREIGN', 'ECOWAS', 'AFRICA', 'AU', 'DIPLOMACY', 'DIASPORA', 'SAHEL', 'NIGER', 'NIDCOM', 'EMBASSY', 'PASSPORT', 'VISA', 'TRADE', 'BRICS', 'UN', 'AMERICA', 'CHINA', 'UK', 'RELATION']):
         links.extend([
             {"title": "Ministry of Foreign Affairs Nigeria", "url": "https://foreignaffairs.gov.ng", "domain": "foreignaffairs.gov.ng"},
             {"title": "Nigerians in Diaspora Commission (NiDCOM)", "url": "https://nidcom.gov.ng", "domain": "nidcom.gov.ng"},
             {"title": "Economic Community of West African States (ECOWAS)", "url": "https://ecowas.int", "domain": "ecowas.int"},
-            {"title": "African Union (AU) / AfCFTA Secretariat", "url": "https://au-afcfta.org", "domain": "au-afcfta.org"},
-            {"title": "Federal Ministry of Industry, Trade and Investment", "url": "https://trade.gov.ng", "domain": "trade.gov.ng"}
+            {"title": "African Union / AfCFTA Secretariat", "url": "https://au-afcfta.org", "domain": "au-afcfta.org"}
         ])
-    # Economy, Inflation, Minimum Wage, Currency/Naira, Taxes, Debt
     elif any(k in upper for k in ['INFLATION', 'ECONOMY', 'NAIRA', 'DOLLAR', 'FX', 'MINIMUM WAGE', 'WAGE', 'SALARY', 'NLC', 'TUC', 'POVERTY', 'PRICE', 'TAX', 'FIRS', 'CBN']):
         links.extend([
             {"title": "Central Bank of Nigeria (CBN) Financial Portal", "url": "https://cbn.gov.ng", "domain": "cbn.gov.ng"},
             {"title": "National Bureau of Statistics (NBS) Economic Ledgers", "url": "https://nigerianstat.gov.ng", "domain": "nigerianstat.gov.ng"},
-            {"title": "Federal Inland Revenue Service (FIRS)", "url": "https://firs.gov.ng", "domain": "firs.gov.ng"},
-            {"title": "National Salaries, Incomes and Wages Commission (NSIWC)", "url": "https://nsiwc.gov.ng", "domain": "nsiwc.gov.ng"}
+            {"title": "Federal Inland Revenue Service (FIRS)", "url": "https://firs.gov.ng", "domain": "firs.gov.ng"}
         ])
-    # Security, Police, Military, Defense
     elif any(k in upper for k in ['SECURITY', 'POLICE', 'ARMY', 'MILITARY', 'BANDIT', 'TERROR', 'KIDNAP', 'INSECURITY', 'DEFENCE']):
         links.extend([
             {"title": "Nigeria Police Force (NPF) Official Portal", "url": "https://npf.gov.ng", "domain": "npf.gov.ng"},
             {"title": "Defence Headquarters Nigeria (DHQ)", "url": "https://defenceheadquarters.gov.ng", "domain": "defenceheadquarters.gov.ng"},
-            {"title": "Office of the National Security Adviser (ONSA)", "url": "https://nsa.gov.ng", "domain": "nsa.gov.ng"},
-            {"title": "Nigeria Security and Civil Defence Corps (NSCDC)", "url": "https://nscdc.gov.ng", "domain": "nscdc.gov.ng"}
+            {"title": "Office of the National Security Adviser (ONSA)", "url": "https://nsa.gov.ng", "domain": "nsa.gov.ng"}
         ])
-    # Education, Schools, Universities, Students
     elif any(k in upper for k in ['SCHOOL', 'EDUCATION', 'STUDENT', 'TEACHER', 'ASUU', 'UBEC', 'NELFUND', 'TETFUND']):
         links.extend([
             {"title": "Universal Basic Education Commission (UBEC)", "url": "https://ubec.gov.ng", "domain": "ubec.gov.ng"},
             {"title": "National Bureau of Statistics Education Data", "url": "https://nigerianstat.gov.ng", "domain": "nigerianstat.gov.ng"},
-            {"title": "Nigerian Education Loan Fund (NELFUND)", "url": "https://nelf.gov.ng", "domain": "nelf.gov.ng"},
-            {"title": "Tertiary Education Trust Fund (TETFund)", "url": "https://tetfund.gov.ng", "domain": "tetfund.gov.ng"}
+            {"title": "Nigerian Education Loan Fund (NELFUND)", "url": "https://nelf.gov.ng", "domain": "nelf.gov.ng"}
         ])
-    # Healthcare, Hospitals, Primary Healthcare, Doctors
-    elif any(k in upper for k in ['HEALTH', 'HOSPITAL', 'DOCTOR', 'DRUG', 'PHC', 'CLINIC', 'NURSE']):
+    elif any(k in upper for k in ['HEALTH', 'HOSPITAL', 'DOCTOR', 'DRUG', 'PHC', 'CLINIC']):
         links.extend([
             {"title": "National Primary Health Care Development Agency", "url": "https://nphcda.gov.ng", "domain": "nphcda.gov.ng"},
             {"title": "Federal Ministry of Health & Social Welfare", "url": "https://health.gov.ng", "domain": "health.gov.ng"}
-        ])
-    # Energy, Power, Petrol, Subsidy, Gas
-    elif any(k in upper for k in ['POWER', 'ELECTRICITY', 'NERC', 'GRID', 'FUEL', 'PETROL', 'NNPC', 'ENERGY', 'GAS', 'SUBSIDY']):
-        links.extend([
-            {"title": "Nigerian Electricity Regulatory Commission (NERC)", "url": "https://nerc.gov.ng", "domain": "nerc.gov.ng"},
-            {"title": "Nigerian Midstream & Downstream Petroleum Authority (NMDPRA)", "url": "https://nmdpra.gov.ng", "domain": "nmdpra.gov.ng"},
-            {"title": "Federal Ministry of Power", "url": "https://power.gov.ng", "domain": "power.gov.ng"}
-        ])
-    # FAAC, Subnational Budgets, Debt, Governors
-    elif any(k in upper for k in ['FAAC', 'LAGOS', 'RIVERS', 'KANO', 'MONEY', 'ALLOCATION', 'REVENUE', 'DEBT', 'BUDGET', 'GOVERNOR', 'COMMISSIONER']):
-        links.extend([
-            {"title": "National Bureau of Statistics (NBS) FAAC Portal", "url": "https://nigerianstat.gov.ng", "domain": "nigerianstat.gov.ng"},
-            {"title": "Office of the Accountant-General (OAGF) Ledgers", "url": "https://oagf.gov.ng", "domain": "oagf.gov.ng"},
-            {"title": "Debt Management Office (DMO) Subnational Records", "url": "https://dmo.gov.ng", "domain": "dmo.gov.ng"},
-            {"title": "Budget Office of the Federation (BOF)", "url": "https://budgetoffice.gov.ng", "domain": "budgetoffice.gov.ng"}
-        ])
-    # LGA Autonomy, Supreme Court, Constitutional Law
-    elif any(k in upper for k in ['LGA', 'AUTONOMY', 'COUNCIL', 'SUPREME COURT', 'LAW', 'CONSTITUTION', 'COURT', 'JUDGE']):
-        links.extend([
-            {"title": "Supreme Court of Nigeria Judgments Archive", "url": "https://supremecourt.gov.ng", "domain": "supremecourt.gov.ng"},
-            {"title": "Federal Ministry of Justice Legal Repository", "url": "https://justice.gov.ng", "domain": "justice.gov.ng"},
-            {"title": "National Judicial Council of Nigeria", "url": "https://njc.gov.ng", "domain": "njc.gov.ng"}
-        ])
-    # FOI Act, Public Procurement, Contracts
-    elif any(k in upper for k in ['FOI', 'REQUEST', 'RECORD', 'MINISTRY', 'MDA', 'CONTRACT', 'PROCUREMENT', 'BPP']):
-        links.extend([
-            {"title": "Freedom of Information Act 2011 Official Gazette", "url": "https://justice.gov.ng/foi-unit", "domain": "justice.gov.ng"},
-            {"title": "Bureau of Public Procurement (BPP) NOCOPO Portal", "url": "https://bpp.gov.ng", "domain": "bpp.gov.ng"},
-            {"title": "Federal Ministry of Finance Open Treasury Portal", "url": "https://opentreasury.gov.ng", "domain": "opentreasury.gov.ng"}
         ])
     else:
         links.extend([
@@ -189,59 +229,67 @@ def _get_verified_links_for_query(query: str) -> List[Dict[str, str]]:
 
 async def ask_civic_assistant(query: str, chat_history: Optional[List[Dict[str, str]]] = None) -> Dict[str, Any]:
     """
-    Detailed, deeply human RAG-grounded civic assistant with natural conversational tone.
-    Gives direct, uncluttered responses without unsolicited links or authority tags.
+    High-intelligence conversational advisor powered primarily by Groq (Llama 3.3 70B)
+    with Gemini fallback and local grounding.
     """
     links = _get_verified_links_for_query(query)
-
-    if not settings.GEMINI_API_KEY:
-        local_data = _get_fast_local_answer(query)
-        if links:
-            local_data["resource_links"] = links
-        return local_data
 
     system_instruction = (
         "You are the WSFU (Who Swear For Us) Senior Civic & International Intelligence Partner. "
         "You possess encyclopedic, forensic, and real-time knowledge of Nigeria, its 36 states, 774 Local Government Areas, "
         "its citizens' economic realities, historical context, constitutional laws, and international foreign relations.\n\n"
-        "CORE INSTRUCTIONS:\n"
-        "1. ANSWER DIRECTLY & CONVERSATIONALLY: Provide a direct, natural, and insightful answer to the user's specific inquiry. "
-        "Do NOT attach unnecessary boilerplate, source lists, or link dumps unless the user specifically asks for sources or links.\n"
-        "2. NATURAL, HUMAN & AUTHORITATIVE VOICE: Speak like a seasoned, brilliant Nigerian investigative journalist and foreign policy analyst. "
-        "Write in rich, flowing conversational paragraphs. Avoid rigid, robotic bullet point tropes (e.g. do not write '• **Term:** Definition').\n"
-        "3. GROUNDED IN CONCRETE DATA & STATUTES: Seamlessly weave in verified facts, constitutional provisions (1999 Constitution as amended), "
-        "statutory acts (FOI Act 2011, Procurement Act 2007, Electricity Act 2023, Petroleum Industry Act 2021), NBS data, and official treaties.\n"
+        "CORE PRINCIPLES:\n"
+        "1. ANSWER EVERY QUESTION DIRECTLY & BRILLIANTLY: Whether the user asks about domestic budget allocations, schools, healthcare, "
+        "police reforms, minimum wage, local government autonomy, foreign policy doctrines, ECOWAS/Sahel geopolitical dynamics, or diaspora rights — "
+        "deliver a thorough, deeply insightful, and accurate response.\n"
+        "2. NATURAL, HUMAN & AUTHORITATIVE VOICE: Speak like a seasoned, brilliant Nigerian investigative journalist and public policy mentor. "
+        "Write in rich, flowing conversational paragraphs. Avoid rigid robotic bullet tropes (e.g. do not write '• **Term:** Definition').\n"
+        "3. GROUNDED IN REAL DATA: Seamlessly weave in verified facts, constitutional provisions (1999 Constitution as amended), "
+        "statutory acts (FOI Act 2011, Procurement Act 2007, Electricity Act 2023), NBS data, and official treaties.\n"
         "4. CULTURAL & LINGUISTIC ADAPTABILITY: If the citizen asks in Nigerian Pidgin, Yoruba, Hausa, or Igbo, reply fluently and respectfully in authentic Nigerian Pidgin/local vernacular.\n"
-        "5. PRACTICAL CITIZEN PERSPECTIVE: Connect political and geopolitical moves to what they mean for the ordinary citizen's pocket, security, cost of living, and democratic rights."
+        "5. UNCLUTTERED OUTPUT: Do not attach unsolicited link boxes, source dumps, or boilerplate intros/outros unless the user specifically asks for links."
     )
 
-    # Multi-turn conversational memory injection
-    history_context = ""
-    if chat_history and len(chat_history) > 0:
-        history_context = "\n\n[CONVERSATION SO FAR]\n"
-        for item in chat_history[-6:]:
-            speaker = "Citizen" if item.get("sender") == "user" or item.get("role") == "user" else "WSFU Analyst"
-            history_context += f"{speaker}: {item.get('text', '')}\n"
-        history_context += "[CITIZEN'S INQUIRY]\n"
+    # 1. Try Groq AI (Llama 3.3 70B Versatile)
+    if settings.GROQ_API_KEY:
+        try:
+            text = await asyncio.wait_for(
+                asyncio.to_thread(_sync_generate_text_groq, system_instruction, query, chat_history),
+                timeout=12.0
+            )
+            if text:
+                res = {"answer": text, "model": "groq/llama-3.3-70b"}
+                if links:
+                    res["resource_links"] = links
+                return res
+        except Exception as e:
+            logger.warning(f"Groq AI call failed ({e}). Falling back to Gemini...")
 
-    prompt = f"{system_instruction}{history_context}Citizen: {query}\n\nWSFU Analyst:"
+    # 2. Try Google Gemini Fallback
+    if settings.GEMINI_API_KEY:
+        try:
+            history_context = ""
+            if chat_history and len(chat_history) > 0:
+                history_context = "\n\n[CONVERSATION SO FAR]\n"
+                for item in chat_history[-6:]:
+                    speaker = "Citizen" if item.get("sender") == "user" or item.get("role") == "user" else "WSFU Analyst"
+                    history_context += f"{speaker}: {item.get('text', '')}\n"
+                history_context += "[CITIZEN'S INQUIRY]\n"
 
-    try:
-        text = await asyncio.wait_for(
-            asyncio.to_thread(_sync_generate_text, prompt),
-            timeout=14.0
-        )
-        if text:
-            res: Dict[str, Any] = {
-                "answer": text,
-                "model": "wsfu-live-intelligence"
-            }
-            if links:
-                res["resource_links"] = links
-            return res
-    except Exception as e:
-        logger.warning(f"Live AI generation failed or timed out ({e}). Falling back to grounded local response.")
+            prompt = f"{system_instruction}{history_context}Citizen: {query}\n\nWSFU Analyst:"
+            text = await asyncio.wait_for(
+                asyncio.to_thread(_sync_generate_text_gemini, prompt),
+                timeout=10.0
+            )
+            if text:
+                res = {"answer": text, "model": "gemini/flash"}
+                if links:
+                    res["resource_links"] = links
+                return res
+        except Exception as e:
+            logger.warning(f"Gemini fallback failed ({e}). Falling back to local intelligence...")
 
+    # 3. Fast Local Grounded Intelligence
     local_data = _get_fast_local_answer(query)
     if links:
         local_data["resource_links"] = links
@@ -323,7 +371,7 @@ def _get_fast_local_answer(query: str) -> Dict[str, Any]:
     elif any(k in upper for k in ['FAAC', 'LAGOS', 'RIVERS', 'KANO', 'MONEY', 'ALLOCATION', 'REVENUE', 'DEBT']):
         answer = (
             "To understand where public money in Nigeria actually goes, you have to look at the Federation Account Allocation Committee (FAAC) meeting that happens in Abuja every month. All the revenue from crude oil sales, corporate taxes collected by FIRS, import customs duties, and the VAT you pay whenever you buy goods get pooled into one giant federation vault.\n\n"
-            "Under the constitutional revenue-sharing formula, the Federal Government takes the largest chunk at 52.68%, the 36 State Governments share 26.72%, and the 774 Local Government Councils share 20.60%. On top of that, oil-producing states like Rivers, Delta, and Akwa Ibom get an additional 13% derivation fund directly off mineral earnings before the rest is shared.\n\n"
+            "Under the constitutional revenue-sharing formula, the Federal Government takes the largest chunk at 52.68%, the 36 State Governments share 26.72%, and the 774 Local Government Councils share 20.60%. On top of that, oil-producing states like Rivers, Delta, and Akwa Ibom get an extra 13% derivation fund directly off mineral earnings before the rest is shared.\n\n"
             "Here is the part most politicians don't explain to citizens: debt deductions at source.\n\n"
             "If your state took massive foreign loans from the World Bank or commercial Eurobonds in the past — like Lagos, Kaduna, or Edo — the Debt Management Office and Accountant-General debit those loan repayment millions automatically before the balance is sent to the state vault. So while a state might boast of a ₦20 billion gross allocation on paper, a noticeable percentage could be wiped out to service past loans.\n\n"
             "The real disparity is in per-capita spending power. For instance, Delta State receives about ₦58,000 per citizen annually from FAAC, while populous states like Kano average around ₦17,600 to ₦20,000 per resident. That means resource management and stopping leakages in non-oil states is a life-or-death matter for public schools and rural hospitals.\n\n"
@@ -352,36 +400,40 @@ def _get_fast_local_answer(query: str) -> Dict[str, Any]:
 
 async def cross_examine_article(title: str, content: str, source_name: str, category: str) -> Dict[str, Any]:
     """
-    Sub-second forensic AI cross-examination of news reports.
+    Sub-second forensic AI cross-examination of news reports using Groq or Gemini.
     """
-    if not settings.GEMINI_API_KEY:
-        return _get_fast_audit(title)
-
-    prompt = f"""
-Journalism Fact-Check Audit:
+    system_prompt = "You are an expert investigative fact-checker and journalism auditor."
+    user_prompt = f"""
+Fact-Check Audit:
 Title: {title}
 Source: {source_name}
 Content: {content[:1500]}
 
-Return JSON only:
-{{
-  "truth_score": 88,
-  "bias_rating": "Objective Reporting",
-  "verified_facts": ["Fact 1", "Fact 2"],
-  "unverified_claims": ["Claim needing verification"],
-  "missing_context": "Important background",
-  "verdict": "Final verdict"
-}}
+Return JSON only with keys: truth_score (int 0-100), bias_rating (str), verified_facts (list), unverified_claims (list), missing_context (str), verdict (str).
 """
-    try:
-        raw_json = await asyncio.wait_for(
-            asyncio.to_thread(_sync_generate_json, prompt),
-            timeout=5.0
-        )
-        if raw_json:
-            return json.loads(raw_json)
-    except Exception:
-        pass
+    # 1. Try Groq
+    if settings.GROQ_API_KEY:
+        try:
+            raw_json = await asyncio.wait_for(
+                asyncio.to_thread(_sync_generate_json_groq, system_prompt, user_prompt),
+                timeout=4.0
+            )
+            if raw_json:
+                return json.loads(raw_json)
+        except Exception:
+            pass
+
+    # 2. Try Gemini
+    if settings.GEMINI_API_KEY:
+        try:
+            raw_json = await asyncio.wait_for(
+                asyncio.to_thread(_sync_generate_json_gemini, user_prompt),
+                timeout=4.0
+            )
+            if raw_json:
+                return json.loads(raw_json)
+        except Exception:
+            pass
 
     return _get_fast_audit(title)
 
@@ -408,31 +460,36 @@ async def polish_foi_letter(mda_name: str, subject: str, raw_notes: str) -> Dict
     """
     Sub-second AI polish for formal FOI Act 2011 legal applications.
     """
-    if not settings.GEMINI_API_KEY:
-        return _get_fast_foi_polish(mda_name, subject, raw_notes)
-
-    prompt = f"""
+    system_prompt = "You are a statutory legal drafter specializing in Nigeria's Freedom of Information Act 2011."
+    user_prompt = f"""
 FOI Act 2011 Application Drafter:
 MDA: {mda_name}
 Subject: {subject}
 Notes: {raw_notes}
 
-Return JSON only:
-{{
-  "formal_subject": "Precise Subject Line",
-  "polished_details": "1. Specific records requested...",
-  "cited_sections": ["Section 1", "Section 4", "Section 7"]
-}}
+Return JSON with keys: formal_subject (str), polished_details (str), cited_sections (list of strings).
 """
-    try:
-        raw_json = await asyncio.wait_for(
-            asyncio.to_thread(_sync_generate_json, prompt),
-            timeout=5.0
-        )
-        if raw_json:
-            return json.loads(raw_json)
-    except Exception:
-        pass
+    if settings.GROQ_API_KEY:
+        try:
+            raw_json = await asyncio.wait_for(
+                asyncio.to_thread(_sync_generate_json_groq, system_prompt, user_prompt),
+                timeout=4.0
+            )
+            if raw_json:
+                return json.loads(raw_json)
+        except Exception:
+            pass
+
+    if settings.GEMINI_API_KEY:
+        try:
+            raw_json = await asyncio.wait_for(
+                asyncio.to_thread(_sync_generate_json_gemini, user_prompt),
+                timeout=4.0
+            )
+            if raw_json:
+                return json.loads(raw_json)
+        except Exception:
+            pass
 
     return _get_fast_foi_polish(mda_name, subject, raw_notes)
 
