@@ -3,7 +3,10 @@ import { FileText, Send, Clock, Copy, Check, Printer, AlertCircle } from 'lucide
 import { submitFOIRequest } from '../lib/api';
 import { FOIRequest } from '../types';
 
+import { FOITrackerDashboard } from './FOITrackerDashboard';
+
 export const FOIGenerator: React.FC = () => {
+  const [viewMode, setViewMode] = useState<'dashboard' | 'generator'>('dashboard');
   const [mdaName, setMdaName] = useState('');
   const [subject, setSubject] = useState('');
   const [details, setDetails] = useState('');
@@ -83,21 +86,59 @@ ${citizenName || 'Applicant'}
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-emerald-950 via-zinc-900 to-zinc-950 border border-emerald-800/40 rounded-2xl p-6 shadow-xl">
-        <div className="flex items-center space-x-2 text-emerald-400 font-semibold text-xs uppercase tracking-wider mb-1">
-          <FileText className="w-4 h-4" />
-          <span>STATUTORY PUBLIC ACCOUNTABILITY TOOL</span>
+      {/* Top Navigation Switcher */}
+      <div className="flex items-center justify-between bg-zinc-900/90 border border-zinc-800 p-2 rounded-2xl">
+        <div className="flex items-center space-x-2">
+          <button
+            onClick={() => setViewMode('dashboard')}
+            className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${
+              viewMode === 'dashboard'
+                ? 'bg-emerald-500 text-black shadow-lg shadow-emerald-500/20'
+                : 'text-zinc-400 hover:text-white'
+            }`}
+          >
+            <Clock className="w-4 h-4" />
+            <span>Public FOI Hub & Scoreboard</span>
+          </button>
+
+          <button
+            onClick={() => setViewMode('generator')}
+            className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${
+              viewMode === 'generator'
+                ? 'bg-emerald-500 text-black shadow-lg shadow-emerald-500/20'
+                : 'text-zinc-400 hover:text-white'
+            }`}
+          >
+            <FileText className="w-4 h-4" />
+            <span>Draft Statutory Application</span>
+          </button>
         </div>
-        <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
-          Nigerian Freedom of Information (FOI) Act 2011 Generator
-        </h1>
-        <p className="text-sm text-zinc-400 mt-1 max-w-2xl leading-relaxed">
-          Under Section 1 of the FOI Act 2011, every Nigerian citizen has a legally protected right to access public records and procurement information from any MDA. Generate your formal statutory notice and track the <strong>7-working-day compliance clock</strong>.
-        </p>
+
+        <span className="text-[11px] text-zinc-500 font-mono hidden sm:inline pr-2">
+          {viewMode === 'dashboard' ? 'Section 4 Compliance Clock' : 'Formal Notice Template'}
+        </span>
       </div>
 
-      {submittedRequest ? (
+      {viewMode === 'dashboard' ? (
+        <FOITrackerDashboard onOpenGenerator={() => setViewMode('generator')} />
+      ) : (
+        <>
+          {/* Header */}
+          <div className="bg-gradient-to-r from-emerald-950 via-zinc-900 to-zinc-950 border border-emerald-800/40 rounded-2xl p-6 shadow-xl">
+            <div className="flex items-center space-x-2 text-emerald-400 font-semibold text-xs uppercase tracking-wider mb-1">
+              <FileText className="w-4 h-4" />
+              <span>STATUTORY PUBLIC ACCOUNTABILITY TOOL</span>
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+              Nigerian Freedom of Information (FOI) Act 2011 Generator
+            </h1>
+            <p className="text-sm text-zinc-400 mt-1 max-w-2xl leading-relaxed">
+              Under Section 1 of the FOI Act 2011, every Nigerian citizen has a legally protected right to access public records and procurement information from any MDA. Generate your formal statutory notice and track the <strong>7-working-day compliance clock</strong>.
+            </p>
+          </div>
+
+          {submittedRequest ? (
+
         <div className="bg-zinc-900 border border-emerald-800/60 rounded-2xl p-6 space-y-6 shadow-xl">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-zinc-800 pb-4 gap-2">
             <div>
@@ -252,7 +293,11 @@ ${citizenName || 'Applicant'}
           </button>
         </form>
       )}
-    </div>
+    </>
+  )}
+</div>
   );
 };
+
+
 

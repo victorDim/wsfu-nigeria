@@ -142,4 +142,8 @@ export interface FOIRequest {
   date_filed: string;
   due_date: string;
   status: 'submitted' | 'acknowledged' | 'under_review' | 'fulfilled' | 'denied' | 'overdue';
+  response_summary?: string;
+  response_date?: string;
+  attachment_url?: string;
 }
+
