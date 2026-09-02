@@ -8,25 +8,16 @@ import {
   Clock,
   MessageSquare,
   Copy,
-  Check,
-  ExternalLink,
-  BookOpen
+  Check
 } from 'lucide-react';
-import { callAIAsk } from '../lib/api';
 
-interface ResourceLink {
-  title: string;
-  url: string;
-  domain?: string;
-}
+import { callAIAsk } from '../lib/api';
 
 interface ChatMessage {
   id: string;
   sender: 'user' | 'ai';
   text: string;
   timestamp: string;
-  sources?: string[];
-  resource_links?: ResourceLink[];
 }
 
 interface ChatSession {
@@ -37,7 +28,8 @@ interface ChatSession {
   messages: ChatMessage[];
 }
 
-const STORAGE_KEY = 'wsfu_ai_chat_sessions_v1';
+const STORAGE_KEY = 'wsfu_ai_chat_sessions_v2';
+
 
 const DEFAULT_WELCOME_MESSAGE: ChatMessage = {
   id: 'msg-welcome',
@@ -184,10 +176,9 @@ export const AICivicWorkspace: React.FC = () => {
         id: 'msg-' + (Date.now() + 1),
         sender: 'ai',
         text: data.answer,
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        sources: data.sources || ["Official Gazettes", "WSFU Intelligence"],
-        resource_links: data.resource_links || []
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       };
+
 
       setSessions(prev =>
         prev.map(s =>
@@ -320,36 +311,9 @@ export const AICivicWorkspace: React.FC = () => {
                     <div className="whitespace-pre-line font-sans leading-relaxed space-y-2">
                       {m.text}
                     </div>
-
-                    {/* Verified Clickable Reference Links */}
-                    {m.resource_links && m.resource_links.length > 0 && (
-                      <div className="mt-4 pt-3.5 border-t border-zinc-800/80 space-y-2">
-                        <div className="flex items-center space-x-1.5 text-[11px] font-bold text-zinc-400 uppercase tracking-wider">
-                          <BookOpen className="w-3.5 h-3.5 text-emerald-400" />
-                          <span>Verified Resources for Extensive Reading:</span>
-                        </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
-                          {m.resource_links.map((link, lIdx) => (
-                            <a
-                              key={lIdx}
-                              href={link.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="flex items-center justify-between p-2.5 bg-zinc-900/90 hover:bg-emerald-950/60 border border-zinc-800 hover:border-emerald-700/60 rounded-xl text-xs text-zinc-300 hover:text-emerald-300 transition-all group/link"
-                            >
-                              <div className="truncate pr-2">
-                                <span className="font-bold block truncate">{link.title}</span>
-                                <span className="text-[10px] text-zinc-500 font-mono">{link.domain || link.url}</span>
-                              </div>
-                              <ExternalLink className="w-3.5 h-3.5 text-zinc-500 group-hover/link:text-emerald-400 flex-shrink-0" />
-                            </a>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
                     {/* Copy Button */}
                     <button
+
 
                       onClick={() => handleCopy(m.text, m.id)}
                       title="Copy response"

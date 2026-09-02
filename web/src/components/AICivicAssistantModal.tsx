@@ -3,26 +3,19 @@ import {
   Send,
   X,
   Sparkles,
-  RefreshCw,
-  ExternalLink,
-  BookOpen
+  RefreshCw
 } from 'lucide-react';
 
 import { callAIAsk } from '../lib/api';
-
-interface ResourceLink {
-  title: string;
-  url: string;
-  domain?: string;
-}
 
 interface AICivicAssistantModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
+
 export const AICivicAssistantModal: React.FC<AICivicAssistantModalProps> = ({ isOpen, onClose }) => {
-  const [messages, setMessages] = useState<Array<{ sender: 'user' | 'ai'; text: string; sources?: string[]; resource_links?: ResourceLink[] }>>([
+  const [messages, setMessages] = useState<Array<{ sender: 'user' | 'ai'; text: string }>>([
     {
       sender: 'ai',
       text: (
@@ -32,7 +25,6 @@ export const AICivicAssistantModal: React.FC<AICivicAssistantModalProps> = ({ is
       )
     }
   ]);
-
 
   const [inputQuery, setInputQuery] = useState('');
   const [loading, setLoading] = useState(false);
@@ -54,9 +46,7 @@ export const AICivicAssistantModal: React.FC<AICivicAssistantModalProps> = ({ is
         ...prev,
         {
           sender: 'ai',
-          text: data.answer,
-          sources: data.sources || ["Official Public Gazettes", "WSFU Intelligence"],
-          resource_links: data.resource_links || []
+          text: data.answer
         }
       ]);
     } catch {
@@ -65,6 +55,7 @@ export const AICivicAssistantModal: React.FC<AICivicAssistantModalProps> = ({ is
       setLoading(false);
     }
   };
+
 
 
 
@@ -132,36 +123,10 @@ export const AICivicAssistantModal: React.FC<AICivicAssistantModalProps> = ({ is
                 }`}
               >
                 <p className="whitespace-pre-line font-sans">{m.text}</p>
-
-                {/* Verified Clickable Resource Links */}
-                {m.resource_links && m.resource_links.length > 0 && (
-                  <div className="mt-3 pt-2.5 border-t border-zinc-800/80 space-y-1.5">
-                    <div className="flex items-center space-x-1.5 text-[10px] font-bold text-zinc-400 uppercase tracking-wider">
-                      <BookOpen className="w-3 h-3 text-emerald-400" />
-                      <span>Verified Resources for Extensive Reading:</span>
-                    </div>
-                    <div className="space-y-1 pt-0.5">
-                      {m.resource_links.map((link, lIdx) => (
-                        <a
-                          key={lIdx}
-                          href={link.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center justify-between p-2 bg-zinc-900/90 hover:bg-emerald-950/60 border border-zinc-800 hover:border-emerald-700/60 rounded-lg text-xs text-zinc-300 hover:text-emerald-300 transition-all group/link"
-                        >
-                          <div className="truncate pr-2">
-                            <span className="font-bold block truncate text-[11px]">{link.title}</span>
-                            <span className="text-[9px] text-zinc-500 font-mono">{link.domain || link.url}</span>
-                          </div>
-                          <ExternalLink className="w-3 h-3 text-zinc-500 group-hover/link:text-emerald-400 flex-shrink-0" />
-                        </a>
-                      ))}
-                    </div>
-                  </div>
-                )}
               </div>
             </div>
           ))}
+
 
 
 
