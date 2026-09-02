@@ -1,7 +1,7 @@
 """
-Authentic, Human-Centered Nigerian Civic Intelligence Engine powered by Google Gemini.
-Writes naturally like an experienced investigative journalist and trusted civic mentor.
-Features multi-model fallback resiliency and comprehensive civic domain intelligence.
+Authentic, Human-Centered Nigerian Civic & International Intelligence Engine powered by Google Gemini.
+Encyclopedic knowledge on Nigerian governance, citizen welfare, macroeconomic policy,
+and global foreign relations (ECOWAS, African Union, AfCFTA, UN, bilateral diplomacy, diaspora affairs).
 """
 
 import json
@@ -98,49 +98,73 @@ def _sync_generate_json(prompt: str) -> Optional[str]:
 
 
 def _get_verified_links_for_query(query: str) -> List[Dict[str, str]]:
-    """Returns curated verified Nigerian governance links tailored to the question."""
+    """Returns curated verified Nigerian governance and international relations links tailored to the question."""
     upper = query.upper()
     links = []
 
-    if any(k in upper for k in ['SECURITY', 'POLICE', 'ARMY', 'MILITARY', 'BANDIT', 'TERROR', 'KIDNAP', 'INSECURITY']):
+    # International Relations, Foreign Policy, ECOWAS, AU, Diaspora, Global Affairs
+    if any(k in upper for k in ['INTERNATIONAL', 'FOREIGN', 'ECOWAS', 'AFRICA', 'AU', 'DIPLOMACY', 'DIASPORA', 'SAHEL', 'NIGER', 'NIDCOM', 'EMBASSY', 'PASSPORT', 'VISA', 'TRADE', 'BRICS', 'UN', 'AMERICA', 'CHINA', 'UK', 'RELATION']):
+        links.extend([
+            {"title": "Ministry of Foreign Affairs Nigeria", "url": "https://foreignaffairs.gov.ng", "domain": "foreignaffairs.gov.ng"},
+            {"title": "Nigerians in Diaspora Commission (NiDCOM)", "url": "https://nidcom.gov.ng", "domain": "nidcom.gov.ng"},
+            {"title": "Economic Community of West African States (ECOWAS)", "url": "https://ecowas.int", "domain": "ecowas.int"},
+            {"title": "African Union (AU) / AfCFTA Secretariat", "url": "https://au-afcfta.org", "domain": "au-afcfta.org"},
+            {"title": "Federal Ministry of Industry, Trade and Investment", "url": "https://trade.gov.ng", "domain": "trade.gov.ng"}
+        ])
+    # Economy, Inflation, Minimum Wage, Currency/Naira, Taxes, Debt
+    elif any(k in upper for k in ['INFLATION', 'ECONOMY', 'NAIRA', 'DOLLAR', 'FX', 'MINIMUM WAGE', 'WAGE', 'SALARY', 'NLC', 'TUC', 'POVERTY', 'PRICE', 'TAX', 'FIRS', 'CBN']):
+        links.extend([
+            {"title": "Central Bank of Nigeria (CBN) Financial Portal", "url": "https://cbn.gov.ng", "domain": "cbn.gov.ng"},
+            {"title": "National Bureau of Statistics (NBS) Economic Ledgers", "url": "https://nigerianstat.gov.ng", "domain": "nigerianstat.gov.ng"},
+            {"title": "Federal Inland Revenue Service (FIRS)", "url": "https://firs.gov.ng", "domain": "firs.gov.ng"},
+            {"title": "National Salaries, Incomes and Wages Commission (NSIWC)", "url": "https://nsiwc.gov.ng", "domain": "nsiwc.gov.ng"}
+        ])
+    # Security, Police, Military, Defense
+    elif any(k in upper for k in ['SECURITY', 'POLICE', 'ARMY', 'MILITARY', 'BANDIT', 'TERROR', 'KIDNAP', 'INSECURITY', 'DEFENCE']):
         links.extend([
             {"title": "Nigeria Police Force (NPF) Official Portal", "url": "https://npf.gov.ng", "domain": "npf.gov.ng"},
             {"title": "Defence Headquarters Nigeria (DHQ)", "url": "https://defenceheadquarters.gov.ng", "domain": "defenceheadquarters.gov.ng"},
             {"title": "Office of the National Security Adviser (ONSA)", "url": "https://nsa.gov.ng", "domain": "nsa.gov.ng"},
             {"title": "Nigeria Security and Civil Defence Corps (NSCDC)", "url": "https://nscdc.gov.ng", "domain": "nscdc.gov.ng"}
         ])
-    elif any(k in upper for k in ['SCHOOL', 'EDUCATION', 'STUDENT', 'TEACHER', 'ASUU', 'UBEC', 'NELFUND']):
+    # Education, Schools, Universities, Students
+    elif any(k in upper for k in ['SCHOOL', 'EDUCATION', 'STUDENT', 'TEACHER', 'ASUU', 'UBEC', 'NELFUND', 'TETFUND']):
         links.extend([
             {"title": "Universal Basic Education Commission (UBEC)", "url": "https://ubec.gov.ng", "domain": "ubec.gov.ng"},
             {"title": "National Bureau of Statistics Education Data", "url": "https://nigerianstat.gov.ng", "domain": "nigerianstat.gov.ng"},
             {"title": "Nigerian Education Loan Fund (NELFUND)", "url": "https://nelf.gov.ng", "domain": "nelf.gov.ng"},
             {"title": "Tertiary Education Trust Fund (TETFund)", "url": "https://tetfund.gov.ng", "domain": "tetfund.gov.ng"}
         ])
-    elif any(k in upper for k in ['HEALTH', 'HOSPITAL', 'DOCTOR', 'DRUG', 'PHC', 'CLINIC']):
+    # Healthcare, Hospitals, Primary Healthcare, Doctors
+    elif any(k in upper for k in ['HEALTH', 'HOSPITAL', 'DOCTOR', 'DRUG', 'PHC', 'CLINIC', 'NURSE']):
         links.extend([
             {"title": "National Primary Health Care Development Agency", "url": "https://nphcda.gov.ng", "domain": "nphcda.gov.ng"},
             {"title": "Federal Ministry of Health & Social Welfare", "url": "https://health.gov.ng", "domain": "health.gov.ng"}
         ])
-    elif any(k in upper for k in ['POWER', 'ELECTRICITY', 'NERC', 'GRID', 'FUEL', 'PETROL', 'NNPC', 'ENERGY']):
+    # Energy, Power, Petrol, Subsidy, Gas
+    elif any(k in upper for k in ['POWER', 'ELECTRICITY', 'NERC', 'GRID', 'FUEL', 'PETROL', 'NNPC', 'ENERGY', 'GAS', 'SUBSIDY']):
         links.extend([
             {"title": "Nigerian Electricity Regulatory Commission (NERC)", "url": "https://nerc.gov.ng", "domain": "nerc.gov.ng"},
-            {"title": "Nigerian Midstream and Downstream Petroleum Regulatory Authority (NMDPRA)", "url": "https://nmdpra.gov.ng", "domain": "nmdpra.gov.ng"},
+            {"title": "Nigerian Midstream & Downstream Petroleum Authority (NMDPRA)", "url": "https://nmdpra.gov.ng", "domain": "nmdpra.gov.ng"},
             {"title": "Federal Ministry of Power", "url": "https://power.gov.ng", "domain": "power.gov.ng"}
         ])
-    elif any(k in upper for k in ['FAAC', 'LAGOS', 'RIVERS', 'KANO', 'MONEY', 'ALLOCATION', 'REVENUE', 'DEBT', 'BUDGET']):
+    # FAAC, Subnational Budgets, Debt, Governors
+    elif any(k in upper for k in ['FAAC', 'LAGOS', 'RIVERS', 'KANO', 'MONEY', 'ALLOCATION', 'REVENUE', 'DEBT', 'BUDGET', 'GOVERNOR', 'COMMISSIONER']):
         links.extend([
             {"title": "National Bureau of Statistics (NBS) FAAC Portal", "url": "https://nigerianstat.gov.ng", "domain": "nigerianstat.gov.ng"},
             {"title": "Office of the Accountant-General (OAGF) Ledgers", "url": "https://oagf.gov.ng", "domain": "oagf.gov.ng"},
             {"title": "Debt Management Office (DMO) Subnational Records", "url": "https://dmo.gov.ng", "domain": "dmo.gov.ng"},
             {"title": "Budget Office of the Federation (BOF)", "url": "https://budgetoffice.gov.ng", "domain": "budgetoffice.gov.ng"}
         ])
-    elif any(k in upper for k in ['LGA', 'AUTONOMY', 'COUNCIL', 'SUPREME COURT', 'LAW', 'CONSTITUTION']):
+    # LGA Autonomy, Supreme Court, Constitutional Law
+    elif any(k in upper for k in ['LGA', 'AUTONOMY', 'COUNCIL', 'SUPREME COURT', 'LAW', 'CONSTITUTION', 'COURT', 'JUDGE']):
         links.extend([
             {"title": "Supreme Court of Nigeria Judgments Archive", "url": "https://supremecourt.gov.ng", "domain": "supremecourt.gov.ng"},
             {"title": "Federal Ministry of Justice Legal Repository", "url": "https://justice.gov.ng", "domain": "justice.gov.ng"},
             {"title": "National Judicial Council of Nigeria", "url": "https://njc.gov.ng", "domain": "njc.gov.ng"}
         ])
-    elif any(k in upper for k in ['FOI', 'REQUEST', 'RECORD', 'MINISTRY', 'MDA', 'CONTRACT']):
+    # FOI Act, Public Procurement, Contracts
+    elif any(k in upper for k in ['FOI', 'REQUEST', 'RECORD', 'MINISTRY', 'MDA', 'CONTRACT', 'PROCUREMENT', 'BPP']):
         links.extend([
             {"title": "Freedom of Information Act 2011 Official Gazette", "url": "https://justice.gov.ng/foi-unit", "domain": "justice.gov.ng"},
             {"title": "Bureau of Public Procurement (BPP) NOCOPO Portal", "url": "https://bpp.gov.ng", "domain": "bpp.gov.ng"},
@@ -150,7 +174,8 @@ def _get_verified_links_for_query(query: str) -> List[Dict[str, str]]:
         links.extend([
             {"title": "National Bureau of Statistics (NBS) Data Portal", "url": "https://nigerianstat.gov.ng", "domain": "nigerianstat.gov.ng"},
             {"title": "Budget Office of the Federation", "url": "https://budgetoffice.gov.ng", "domain": "budgetoffice.gov.ng"},
-            {"title": "Premium Times Nigeria Investigative Bureau", "url": "https://premiumtimesng.com", "domain": "premiumtimesng.com"}
+            {"title": "Premium Times Nigeria Investigative Bureau", "url": "https://premiumtimesng.com", "domain": "premiumtimesng.com"},
+            {"title": "Ministry of Foreign Affairs Nigeria", "url": "https://foreignaffairs.gov.ng", "domain": "foreignaffairs.gov.ng"}
         ])
 
     return links
@@ -158,7 +183,8 @@ def _get_verified_links_for_query(query: str) -> List[Dict[str, str]]:
 
 async def ask_civic_assistant(query: str, chat_history: Optional[List[Dict[str, str]]] = None) -> Dict[str, Any]:
     """
-    Detailed, deeply human RAG-grounded civic assistant with natural conversational tone.
+    Detailed, deeply human RAG-grounded civic assistant with natural conversational tone
+    covering domestic governance, citizen welfare, and international foreign relations.
     """
     links = _get_verified_links_for_query(query)
 
@@ -168,14 +194,19 @@ async def ask_civic_assistant(query: str, chat_history: Optional[List[Dict[str, 
         return local_data
 
     system_instruction = (
-        "You are the WSFU (Who Swear For Us) Civic Intelligence Partner. You are NOT a generic AI bot or a robotic FAQ manual. "
-        "You are a real, sharp, investigative Nigerian journalist and public finance specialist talking directly to a fellow citizen.\n\n"
-        "WRITING & TONE RULES (STRICT HUMAN VOICE):\n"
-        "1. Answer the user's specific inquiry directly in natural, flowing conversational paragraphs. Never drift or deviate to unrelated legal concepts unless requested.\n"
-        "2. DO NOT use rigid robotic bullet tropes like '• **Concept:** Definition'. Write naturally in prose and engaging storytelling paragraphs.\n"
-        "3. Provide realistic Nigerian figures, institutional realities, and on-the-ground facts.\n"
-        "4. If the citizen writes or asks in Nigerian Pidgin, reply with authentic, warm, and natural Nigerian Pidgin English.\n"
-        "5. Conclude with realistic, practical steps on what citizens can do to verify, monitor, or demand accountability."
+        "You are the WSFU (Who Swear For Us) Senior Civic & International Intelligence Partner. "
+        "You possess encyclopedic, forensic, and real-time knowledge of Nigeria, its 36 states, 774 Local Government Areas, "
+        "its citizens' economic realities, historical context, constitutional laws, and international foreign relations.\n\n"
+        "CORE INSTRUCTIONS:\n"
+        "1. ANSWER ANY QUESTION DIRECTLY & FORENSICALLY: Whether the user asks about domestic budget allocations, LGA autonomy, schools, hospitals, "
+        "minimum wage, security votes, regional conflicts, foreign policy doctrines, ECOWAS/Sahel geopolitical dynamics, AfCFTA trade, "
+        "bilateral relations with the US, China, UK, or EU, or diaspora affairs — give a thorough, accurate, and deeply insightful response.\n"
+        "2. NATURAL, HUMAN & AUTHORITATIVE VOICE: Speak like a seasoned, brilliant Nigerian investigative journalist and foreign policy analyst. "
+        "Write in rich, flowing conversational paragraphs. Avoid rigid, robotic bullet point tropes (e.g. do not write '• **Term:** Definition').\n"
+        "3. GROUNDED IN CONCRETE DATA & STATUTES: Seamlessly weave in verified facts, constitutional provisions (1999 Constitution as amended), "
+        "statutory acts (FOI Act 2011, Procurement Act 2007, Electricity Act 2023, Petroleum Industry Act 2021), NBS data, and official treaties.\n"
+        "4. CULTURAL & LINGUISTIC ADAPTABILITY: If the citizen asks in Nigerian Pidgin, Yoruba, Hausa, or Igbo, reply fluently and respectfully in authentic Nigerian Pidgin/local vernacular.\n"
+        "5. PRACTICAL CITIZEN PERSPECTIVE: Always connect political and geopolitical moves to what they mean for the ordinary citizen's pocket, security, cost of living, and democratic rights."
     )
 
     # Multi-turn conversational memory injection
@@ -185,21 +216,21 @@ async def ask_civic_assistant(query: str, chat_history: Optional[List[Dict[str, 
         for item in chat_history[-6:]:
             speaker = "Citizen" if item.get("sender") == "user" or item.get("role") == "user" else "WSFU Analyst"
             history_context += f"{speaker}: {item.get('text', '')}\n"
-        history_context += "[CITIZEN'S NEW QUESTION]\n"
+        history_context += "[CITIZEN'S INQUIRY]\n"
 
     prompt = f"{system_instruction}{history_context}Citizen: {query}\n\nWSFU Analyst:"
 
     try:
         text = await asyncio.wait_for(
             asyncio.to_thread(_sync_generate_text, prompt),
-            timeout=12.0
+            timeout=14.0
         )
         if text:
             return {
                 "answer": text,
-                "sources": ["National Bureau of Statistics (NBS)", "FAAC Sub-Committee", "Supreme Court Records", "Budget Office of the Federation"],
+                "sources": ["National Bureau of Statistics (NBS)", "Ministry of Foreign Affairs", "Supreme Court Records", "Budget Office of the Federation"],
                 "resource_links": links,
-                "model": "wsfu-live-gemini"
+                "model": "wsfu-live-intelligence"
             }
     except Exception as e:
         logger.warning(f"Live AI generation failed or timed out ({e}). Falling back to grounded local response.")
@@ -210,10 +241,32 @@ async def ask_civic_assistant(query: str, chat_history: Optional[List[Dict[str, 
 
 
 def _get_fast_local_answer(query: str) -> Dict[str, Any]:
-    """In-depth, completely natural human responses for all civic domains."""
+    """In-depth, completely natural human responses for all civic and international domains."""
     upper = query.upper()
 
-    if any(k in upper for k in ['SECURITY', 'POLICE', 'ARMY', 'MILITARY', 'BANDIT', 'TERROR', 'KIDNAP', 'INSECURITY']):
+    # International Relations & Foreign Policy
+    if any(k in upper for k in ['INTERNATIONAL', 'FOREIGN', 'ECOWAS', 'AFRICA', 'AU', 'DIPLOMACY', 'DIASPORA', 'SAHEL', 'NIGER', 'NIDCOM', 'EMBASSY', 'PASSPORT', 'VISA', 'TRADE', 'BRICS', 'UN', 'AMERICA', 'CHINA', 'UK', 'RELATION']):
+        answer = (
+            "Nigeria's foreign policy and international relations have historically been guided by an 'Afrocentric' doctrine — placing Africa at the center of national security, diplomacy, and trade. However, in today's shifting global order, Nigeria's international engagement is navigating high-stakes geopolitical tests across West Africa and the wider world.\n\n"
+            "At the regional level within ECOWAS (the Economic Community of West African States), Nigeria has long served as the economic and military anchor, previously leading ECOMOG peacekeeping interventions in Liberia and Sierra Leone. Following military coups in neighboring Niger, Mali, and Burkina Faso, relations became strained under ECOWAS sanctions, leading those three countries to form the Alliance of Sahel States (AES) and threaten withdrawal from ECOWAS. Nigeria's diplomatic priority has since shifted toward constructive engagement to prevent regional disintegration and preserve border trade.\n\n"
+            "On continental trade, Nigeria is a key signatory to the African Continental Free Trade Area (AfCFTA), which creates a single market of 1.3 billion people. Maximizing AfCFTA benefits requires fixing port congestion, resolving non-tariff barriers, and expanding domestic manufacturing beyond crude oil exports.\n\n"
+            "On the global stage, Nigeria maintains non-aligned strategic partnerships:\n"
+            "• With China: Heavy infrastructure financing (railways, deep seaports like Lekki Port, and airport terminals) alongside bilateral currency swap agreements.\n"
+            "• With the US, UK, and European Union: Crucial defense cooperation, intelligence sharing against maritime piracy in the Gulf of Guinea, and foreign direct investment.\n"
+            "• In Multilateral Forums: Active membership in the United Nations, African Union, Commonwealth, and growing engagement with the BRICS alliance as a partner country to expand non-dollar trade settlement.\n\n"
+            "Diaspora Dynamics: Over 15 million Nigerians in the diaspora remit over $20 billion annually through the Central Bank's remittance corridors, exceeding official foreign direct investment. Through the Nigerians in Diaspora Commission (NiDCOM), citizens abroad continue to advocate for diaspora voting rights, passport consular improvements, and investment protection."
+        )
+    # Citizen Economy, Minimum Wage, Inflation
+    elif any(k in upper for k in ['INFLATION', 'ECONOMY', 'NAIRA', 'DOLLAR', 'FX', 'MINIMUM WAGE', 'WAGE', 'SALARY', 'NLC', 'TUC', 'POVERTY', 'PRICE', 'TAX', 'FIRS', 'CBN']):
+        answer = (
+            "Nigeria's macroeconomic landscape is undergoing its most profound structural realignment in decades, primarily driven by two twin fiscal shocks: the complete removal of the petrol subsidy and the unification of the foreign exchange rate.\n\n"
+            "While these reforms eliminated trillions in arbitrage and boosted monthly Federation Account revenues to record levels (often exceeding ₦1.2 trillion monthly), they triggered headline inflation to historic highs, driven by soaring food prices and transportation costs.\n\n"
+            "To cushion the impact on the Nigerian workforce, the Federal Government and organized labor (NLC and TUC) enacted the National Minimum Wage Act 2024, raising the statutory national minimum wage from ₦30,000 to ₦70,000 per month with a mandatory three-year review cycle. However, the critical implementation battle is at the subnational level: several state governments and private sector employers have cited fiscal constraints in adopting the new wage baseline.\n\n"
+            "On fiscal and tax policy, the Presidential Committee on Fiscal Policy and Tax Reforms has proposed consolidating over 60 disparate taxes into single-digit collection streams to relieve micro-businesses while eliminating withholding taxes for low-income earners.\n\n"
+            "What citizens can do: Monitor whether your State Governor has officially commenced implementation of the ₦70,000 minimum wage and consequential adjustments for civil servants on the WSFU Wage Tracker."
+        )
+    # Security Domain
+    elif any(k in upper for k in ['SECURITY', 'POLICE', 'ARMY', 'MILITARY', 'BANDIT', 'TERROR', 'KIDNAP', 'INSECURITY', 'DEFENCE']):
         answer = (
             "The security situation in Nigeria today is a complex, multi-front challenge shaped by regional dynamics, manpower deficits, and deep-seated fiscal opacity.\n\n"
             "Across the geopolitical zones, the nature of insecurity varies significantly:\n"
@@ -223,14 +276,16 @@ def _get_fast_local_answer(query: str) -> Dict[str, Any]:
             "Second is the issue of un-audited 'Security Votes'. State Governors collect billions of Naira annually under the guise of security votes without legislative oversight or public procurement scrutiny. Despite the Defence and Police budget taking over ₦3.2 trillion in the 2024 appropriation, frontline soldiers and police personnel frequently raise alarms over delayed allowances, obsolete tactical equipment, and poor welfare.\n\n"
             "What citizens can do: Demand total audit transparency on state security votes from your State House of Assembly, and support institutional calls for state and community policing with strict constitutional safeguards."
         )
-    elif any(k in upper for k in ['POWER', 'ELECTRICITY', 'NERC', 'GRID', 'FUEL', 'PETROL', 'NNPC', 'ENERGY']):
+    # Power & Energy Domain
+    elif any(k in upper for k in ['POWER', 'ELECTRICITY', 'NERC', 'GRID', 'FUEL', 'PETROL', 'NNPC', 'ENERGY', 'GAS', 'SUBSIDY']):
         answer = (
             "Nigeria's energy crisis operates on a dual bottleneck: a fragile national electrical grid and high fuel costs following the removal of the petrol subsidy.\n\n"
             "On the power grid side, despite having over 13,000 MW of installed generation capacity, the national grid regularly collapses and averages only 4,000 MW to 4,500 MW of actual wheeled electricity. The fundamental issues are gas supply debt to Generation Companies (GenCos), dilapidated transmission line infrastructure under the Transmission Company of Nigeria (TCN), and high collection losses by Distribution Companies (DisCos).\n\n"
             "The enactment of the Electricity Act 2023 was a major constitutional milestone: it broke the federal monopoly and empowered State Governments to establish their own electricity regulatory commissions (like Lagos, Enugu, and Ondo) to generate and distribute power independently.\n\n"
             "What you can do: Track whether your state has established its State Electricity Regulatory Board to attract off-grid IPP solar and gas investments to your community."
         )
-    elif any(k in upper for k in ['SCHOOL', 'EDUCATION', 'STUDENT', 'TEACHER', 'ASUU', 'UBEC', 'NELFUND']):
+    # Education & Schools Domain
+    elif any(k in upper for k in ['SCHOOL', 'EDUCATION', 'STUDENT', 'TEACHER', 'ASUU', 'UBEC', 'NELFUND', 'TETFUND']):
         answer = (
             "The state of public education in Nigeria today presents a sobering, multi-dimensional crisis across primary, secondary, and tertiary tiers.\n\n"
             "At the foundational basic education level (primary and junior secondary), the single biggest bottleneck is the Universal Basic Education Commission (UBEC) matching grant crisis. Under the law, the Federal Government sets aside 2% of the Consolidated Revenue Fund for basic education, but state governments must provide a 50% matching counterpart fund to access it. Over ₦100 billion in matching grants remains untouched in Central Bank vaults because more than 20 state governors have failed to provide their counterpart funds. Meanwhile, millions of primary school pupils in rural communities sit on bare floors with leaking zinc roofs, zero textbooks, and un-equipped laboratories.\n\n"
@@ -238,13 +293,15 @@ def _get_fast_local_answer(query: str) -> Dict[str, Any]:
             "At the tertiary level, federal and state universities struggle with recurring funding deficits, dilapidated hostels, and brain drain ('Japa') among academic lecturers. The newly introduced Nigerian Education Loan Fund (NELFUND) represents an attempt to bridge tuition affordability, but systemic capital investment in research and modern laboratory equipment remains low compared to UNESCO's recommended 15-20% national budget benchmark (Nigeria averages around 5-8%).\n\n"
             "What citizens can do: Check if your State Universal Basic Education Board (SUBEB) has accessed its annual UBEC matching grant allocation, and use our FOI Generator to demand public disclosure on school rehabilitation contract awards in your constituency."
         )
-    elif any(k in upper for k in ['HEALTH', 'HOSPITAL', 'DOCTOR', 'DRUG', 'PHC', 'CLINIC']):
+    # Healthcare Domain
+    elif any(k in upper for k in ['HEALTH', 'HOSPITAL', 'DOCTOR', 'DRUG', 'PHC', 'CLINIC', 'NURSE']):
         answer = (
             "Nigeria's public healthcare system faces severe structural strain, characterized by underfunded Primary Healthcare Centers (PHCs), massive brain drain of medical personnel, and high out-of-pocket medical expenditures.\n\n"
             "Out of roughly 30,000 primary healthcare centers across the country, the National Primary Health Care Development Agency (NPHCDA) estimates that less than 20% are fully functional with reliable water, 24/7 solar electricity, essential medicines, and certified midwives. The Basic Health Care Provision Fund (BHCPF) — established under the National Health Act 2014 to allocate at least 1% of the Consolidated Revenue Fund — has improved funding, but grassroots execution in rural local government areas remains weak.\n\n"
             "Furthermore, the mass emigration of doctors and nurses to the UK, Canada, and the Middle East has reduced doctor-to-patient ratios to roughly 1 doctor per 5,000 citizens, far worse than the WHO recommended 1:600 standard.\n\n"
             "What you can do: Track whether your state government is remitting its counterpart contributions to the State Primary Health Care Board, and use the WSFU accountability hub to monitor health budget execution."
         )
+    # LGA Autonomy & Supreme Court Domain
     elif any(k in upper for k in ['LGA', 'AUTONOMY', 'COUNCIL', 'LOCAL GOV', 'SUPREME COURT']):
         answer = (
             "Let's put this in plain terms: for more than twenty years, state governors across Nigeria basically held local government finances in a stranglehold through what was called the State Joint Local Government Account. Governors would collect all the money coming from Abuja, give local councils peanuts for basic salaries, and keep the rest under state control. On July 11, 2024, the Supreme Court finally pulled the plug on that system.\n\n"
@@ -254,6 +311,7 @@ def _get_fast_local_answer(query: str) -> Dict[str, Any]:
             "Why this matters for you and me: Your LGA Chairman can no longer give the old excuse that 'His Excellency hasn't released our funds' when primary health clinics have no basic malaria drugs, community boreholes pack up, or community roads are flooded. That money is landing directly in their accounts every single month.\n\n"
             "What you should do right now: Find out who your ward councillor and council chairman are, request their monthly project roadmap, and demand to see how that ₦300M+ monthly cash is being spent right inside your neighborhood."
         )
+    # FAAC & State Fiscal Ledgers
     elif any(k in upper for k in ['FAAC', 'LAGOS', 'RIVERS', 'KANO', 'MONEY', 'ALLOCATION', 'REVENUE', 'DEBT']):
         answer = (
             "To understand where public money in Nigeria actually goes, you have to look at the Federation Account Allocation Committee (FAAC) meeting that happens in Abuja every month. All the revenue from crude oil sales, corporate taxes collected by FIRS, import customs duties, and the VAT you pay whenever you buy goods get pooled into one giant federation vault.\n\n"
@@ -263,6 +321,7 @@ def _get_fast_local_answer(query: str) -> Dict[str, Any]:
             "The real disparity is in per-capita spending power. For instance, Delta State receives about ₦58,000 per citizen annually from FAAC, while populous states like Kano average around ₦17,600 to ₦20,000 per resident. That means resource management and stopping leakages in non-oil states is a life-or-death matter for public schools and rural hospitals.\n\n"
             "What you can do: Track your state's net allocation on our WSFU FAAC Explorer and compare it against your state's published budget to see if capital infrastructure is truly getting funded."
         )
+    # FOI Act & Public Scrutiny
     elif any(k in upper for k in ['FOI', 'REQUEST', 'RIGHT', 'LAW', 'ACT']):
         answer = (
             "If you want to hold any public office in Nigeria accountable, the Freedom of Information (FOI) Act 2011 is arguably the sharpest tool in your arsenal. The law is very clear: public records belong to the citizens, not to the private drawers of government officials.\n\n"
@@ -272,14 +331,14 @@ def _get_fast_local_answer(query: str) -> Dict[str, Any]:
         )
     else:
         answer = (
-            f"When looking at governance in Nigeria regarding '{query}', the fundamental civic objective is ensuring public transparency, fiscal discipline, and direct accountability to the citizens.\n\n"
-            "Under our constitutional framework, every public institution and political officeholder is funded by public revenues derived from taxes, mineral resources, and national tariffs. Real accountability requires citizens to scrutinize capital budget appropriations, track public procurement contract awards, and demand measurable results rather than political rhetoric.\n\n"
-            "Feel free to ask for specific budget breakdowns, state-by-state comparisons, or legal statutory provisions regarding this topic, and we will dive straight into the verified records."
+            f"Regarding your inquiry on '{query}', public transparency and institutional accountability remain the core foundations of Nigerian democracy.\n\n"
+            "Under Section 14(2)(a) of the 1999 Constitution (as amended), sovereignty belongs to the citizens from whom government derives all its authority. Whether examining federal budget allocations, legislative oversight by the National Assembly, subnational execution across the 36 states, or bilateral international treaties, verified public records provide the ultimate benchmark of performance.\n\n"
+            "Feel free to ask for specific state-level data, comparative fiscal ledgers, legal citations, or foreign policy analysis on this topic, and we will unpack the numbers and official documentation together."
         )
 
     return {
         "answer": answer,
-        "sources": ["National Bureau of Statistics", "Supreme Court of Nigeria", "FOI Act 2011", "Fiscal Responsibility Commission"],
+        "sources": ["National Bureau of Statistics", "Ministry of Foreign Affairs", "Supreme Court of Nigeria", "FOI Act 2011"],
         "model": "wsfu-human-intelligence"
     }
 
