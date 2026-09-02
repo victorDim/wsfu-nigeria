@@ -309,12 +309,10 @@ export const App: React.FC = () => {
         onClick={() => setIsAIAssistantOpen(true)}
         className="fixed bottom-6 left-6 z-40 flex items-center space-x-2 px-4 py-3 bg-gradient-to-r from-emerald-600 to-zinc-900 hover:from-emerald-500 hover:to-zinc-800 text-white font-extrabold text-xs rounded-full shadow-2xl shadow-emerald-950/80 border border-emerald-400/40 transition-all hover:scale-105 cursor-pointer"
       >
-        <Sparkles className="w-5 h-5 text-emerald-300 animate-pulse" />
-        <span className="hidden sm:inline">Ask WSFU AI</span>
-        <span className="text-[10px] bg-emerald-950 text-emerald-400 px-1.5 py-0.5 rounded border border-emerald-700 font-mono">
-          Gemini 3.7
-        </span>
+        <Sparkles className="w-5 h-5 text-emerald-300" />
+        <span>Ask WSFU AI</span>
       </button>
+
 
       {/* Floating Interactive WhatsApp Civic Bot Simulator */}
       <WhatsAppBotSimulator />

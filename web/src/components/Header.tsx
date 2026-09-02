@@ -126,13 +126,11 @@ export const Header: React.FC<HeaderProps> = ({
                     : 'text-emerald-400 hover:text-emerald-300 hover:bg-emerald-950/40 border border-emerald-800/40'
                 }`}
               >
-                <Sparkles className="w-3.5 h-3.5 animate-pulse" />
-                <span>AI Brain</span>
-                <span className="text-[9px] bg-emerald-950 text-emerald-400 font-mono px-1 rounded border border-emerald-700 hidden lg:inline">
-                  3.7
-                </span>
+                <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
+                <span>AI Assistant</span>
               </button>
             </nav>
+
 
 
             {/* Topics Preference Button */}

@@ -207,9 +207,10 @@ export const AICivicWorkspace: React.FC = () => {
             Conversational Governance Brain
           </h1>
           <p className="text-xs text-zinc-400 max-w-xl">
-            Multi-turn conversation memory with natural human reasoning. Powered by <strong>Google Gemini 3.7 Flash</strong>.
+            Real-time conversational memory with forensic accountability analysis and statutory legal insights.
           </p>
         </div>
+
 
         <div className="flex items-center space-x-2">
           <button

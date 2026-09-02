@@ -19,13 +19,14 @@ export const AICivicAssistantModal: React.FC<AICivicAssistantModalProps> = ({ is
     {
       sender: 'ai',
       text: (
-        "🇳🇬 **Welcome to WSFU AI Civic Intelligence Engine (Gemini 3.7 Flash)**\n\n" +
-        "I am your forensic public governance advisor. Ask me anything about Nigerian federal/state budgets, FAAC disbursements, political manifesto promises, Supreme Court rulings, or the FOI Act.\n\n" +
-        "_You can also ask in Nigerian Pidgin, Yoruba, Hausa, or Igbo._"
+        "👋 **Hello! I'm your WSFU Civic Intelligence Partner.**\n\n" +
+        "Think of me as your go-to friend for understanding Nigerian governance, public money, and citizen rights. Whether you want to trace where your state's monthly FAAC allocation went, check if a Governor kept a campaign promise, or need help drafting an FOI letter — I'm right here with you.\n\n" +
+        "_Feel free to chat with me in English or freely in Nigerian Pidgin, Yoruba, Hausa, or Igbo. What would you like to investigate today?_"
       ),
       sources: ["National Bureau of Statistics", "FAAC Technical Committee", "Supreme Court Records"]
     }
   ]);
+
   const [inputQuery, setInputQuery] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -70,13 +71,14 @@ export const AICivicAssistantModal: React.FC<AICivicAssistantModalProps> = ({ is
             </div>
             <div>
               <h3 className="font-extrabold text-sm text-white flex items-center gap-1.5">
-                <span>Ask WSFU AI Assistant</span>
+                <span>WSFU Civic Intelligence</span>
                 <span className="text-[10px] bg-emerald-950 text-emerald-400 font-mono px-1.5 py-0.5 rounded border border-emerald-800">
-                  Gemini 3.7 Flash
+                  Verified Partner
                 </span>
               </h3>
-              <p className="text-xs text-zinc-400">RAG-Grounded Nigerian Governance & Fiscal Intelligence</p>
+              <p className="text-xs text-zinc-400">Grounded Nigerian Governance & Fiscal Intelligence</p>
             </div>
+
           </div>
 
           <button
