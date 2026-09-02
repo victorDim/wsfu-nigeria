@@ -8,10 +8,17 @@ import {
   Clock,
   MessageSquare,
   Copy,
-  Check
+  Check,
+  ExternalLink,
+  BookOpen
 } from 'lucide-react';
-
 import { callAIAsk } from '../lib/api';
+
+interface ResourceLink {
+  title: string;
+  url: string;
+  domain?: string;
+}
 
 interface ChatMessage {
   id: string;
@@ -19,6 +26,7 @@ interface ChatMessage {
   text: string;
   timestamp: string;
   sources?: string[];
+  resource_links?: ResourceLink[];
 }
 
 interface ChatSession {
@@ -36,15 +44,21 @@ const DEFAULT_WELCOME_MESSAGE: ChatMessage = {
   sender: 'ai',
   text: (
     "👋 **Hello! I'm your WSFU Civic Intelligence Partner.**\n\n" +
-    "Think of me as your personal, non-partisan governance analyst and investigative friend on the ground. I'm here to help you unpack what's really happening in Nigeria's public sector:\n\n" +
+    "Think of me as your go-to friend for understanding Nigerian governance, public money, and citizen rights. Whether you want to trace where your state's monthly FAAC allocation went, check if a Governor kept a campaign promise, or need help drafting an FOI letter — I'm right here with you.\n\n" +
     "• **Track State & LGA FAAC Allocations:** Where the money went, debt deductions, and per-capita spending power.\n" +
     "• **Audit Political Manifesto Promises:** Real-world delivery tracking for the President and Governors.\n" +
     "• **Demystify Nigerian Laws:** The Supreme Court LGA financial autonomy ruling, FOI Act 2011, Tax Reforms, and PIA in plain terms.\n" +
     "• **Draft Statutory Legal Notices:** Polished Section 1 FOI requests for official public records.\n\n" +
-    "_Feel free to ask in English or vibrantly in Nigerian Pidgin! What would you like to investigate today?_"
+    "_Feel free to chat with me in English or freely in Nigerian Pidgin, Yoruba, Hausa, or Igbo. What would you like to investigate today?_"
   ),
   timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-  sources: ["National Bureau of Statistics", "FAAC Technical Committee", "Supreme Court Records", "FOI Act 2011"]
+  sources: ["National Bureau of Statistics", "FAAC Technical Committee", "Supreme Court Records", "FOI Act 2011"],
+  resource_links: [
+    { title: "National Bureau of Statistics (NBS) Portal", url: "https://nigerianstat.gov.ng", domain: "nigerianstat.gov.ng" },
+    { title: "Office of the Accountant-General FAAC Reports", url: "https://oagf.gov.ng", domain: "oagf.gov.ng" },
+    { title: "Supreme Court of Nigeria Judgments Archive", url: "https://supremecourt.gov.ng", domain: "supremecourt.gov.ng" },
+    { title: "Federal Ministry of Justice FOI Unit", url: "https://justice.gov.ng", domain: "justice.gov.ng" }
+  ]
 };
 
 export const AICivicWorkspace: React.FC = () => {
@@ -177,7 +191,8 @@ export const AICivicWorkspace: React.FC = () => {
         sender: 'ai',
         text: data.answer,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        sources: data.sources || ["Official Gazettes", "WSFU Intelligence"]
+        sources: data.sources || ["Official Gazettes", "WSFU Intelligence"],
+        resource_links: data.resource_links || []
       };
 
       setSessions(prev =>
@@ -207,10 +222,9 @@ export const AICivicWorkspace: React.FC = () => {
             Conversational Governance Brain
           </h1>
           <p className="text-xs text-zinc-400 max-w-xl">
-            Real-time conversational memory with forensic accountability analysis and statutory legal insights.
+            In-depth forensic accountability analysis, multi-turn memory, and verified statutory reference links.
           </p>
         </div>
-
 
         <div className="flex items-center space-x-2">
           <button
@@ -231,9 +245,8 @@ export const AICivicWorkspace: React.FC = () => {
         </div>
       </div>
 
-
       {/* Main Workspace with Chat History Sidebar + Conversation Thread */}
-      <div className="bg-zinc-900 border border-zinc-800 rounded-2xl shadow-xl overflow-hidden flex flex-col md:flex-row h-[620px]">
+      <div className="bg-zinc-900 border border-zinc-800 rounded-2xl shadow-xl overflow-hidden flex flex-col md:flex-row h-[660px]">
         {/* Chat History Sidebar */}
         <div
           className={`${
@@ -290,7 +303,7 @@ export const AICivicWorkspace: React.FC = () => {
         {/* Conversation Area */}
         <div className="flex-1 flex flex-col h-full bg-zinc-900 overflow-hidden">
           {/* Conversation Messages Feed */}
-          <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4">
+          <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-5">
             {activeSession.messages.map((m) => {
               const isUser = m.sender === 'user';
               return (
@@ -299,24 +312,52 @@ export const AICivicWorkspace: React.FC = () => {
                   className={`flex flex-col ${isUser ? 'items-end' : 'items-start'} animate-fadeIn`}
                 >
                   <div
-                    className={`max-w-[90%] sm:max-w-[85%] rounded-2xl p-4 text-xs sm:text-sm leading-relaxed shadow-lg relative group ${
+                    className={`max-w-[95%] sm:max-w-[90%] rounded-2xl p-5 text-xs sm:text-sm leading-relaxed shadow-lg relative group ${
                       isUser
                         ? 'bg-emerald-600 text-white rounded-br-none'
                         : 'bg-zinc-950 text-zinc-200 rounded-bl-none border border-zinc-800'
                     }`}
                   >
-                    <div className="flex items-center justify-between mb-1.5 opacity-60 text-[10px] font-mono">
-                      <span>{isUser ? 'Citizen (You)' : 'WSFU AI Partner'}</span>
+                    <div className="flex items-center justify-between mb-2 opacity-60 text-[10px] font-mono">
+                      <span>{isUser ? 'Citizen (You)' : 'WSFU Civic Partner'}</span>
                       <span>{m.timestamp}</span>
                     </div>
 
-                    <div className="whitespace-pre-line font-sans leading-relaxed">
+                    <div className="whitespace-pre-line font-sans leading-relaxed space-y-2">
                       {m.text}
                     </div>
 
+                    {/* Verified Clickable Reference Links */}
+                    {m.resource_links && m.resource_links.length > 0 && (
+                      <div className="mt-4 pt-3.5 border-t border-zinc-800/80 space-y-2">
+                        <div className="flex items-center space-x-1.5 text-[11px] font-bold text-zinc-400 uppercase tracking-wider">
+                          <BookOpen className="w-3.5 h-3.5 text-emerald-400" />
+                          <span>Verified Resources for Extensive Reading:</span>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                          {m.resource_links.map((link, lIdx) => (
+                            <a
+                              key={lIdx}
+                              href={link.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center justify-between p-2.5 bg-zinc-900/90 hover:bg-emerald-950/60 border border-zinc-800 hover:border-emerald-700/60 rounded-xl text-xs text-zinc-300 hover:text-emerald-300 transition-all group/link"
+                            >
+                              <div className="truncate pr-2">
+                                <span className="font-bold block truncate">{link.title}</span>
+                                <span className="text-[10px] text-zinc-500 font-mono">{link.domain || link.url}</span>
+                              </div>
+                              <ExternalLink className="w-3.5 h-3.5 text-zinc-500 group-hover/link:text-emerald-400 flex-shrink-0" />
+                            </a>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Sources Badge Strip */}
                     {m.sources && m.sources.length > 0 && (
-                      <div className="mt-3 pt-2.5 border-t border-zinc-800/80 flex flex-wrap items-center gap-1.5 text-[10px] text-zinc-400">
-                        <span className="font-mono text-zinc-500 font-bold uppercase">Sources:</span>
+                      <div className="mt-3 pt-2.5 border-t border-zinc-800/60 flex flex-wrap items-center gap-1.5 text-[10px] text-zinc-400">
+                        <span className="font-mono text-zinc-500 font-bold uppercase">Authorities:</span>
                         {m.sources.map((src, sIdx) => (
                           <span
                             key={sIdx}
@@ -332,7 +373,7 @@ export const AICivicWorkspace: React.FC = () => {
                     <button
                       onClick={() => handleCopy(m.text, m.id)}
                       title="Copy response"
-                      className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 p-1 bg-zinc-900/90 text-zinc-400 hover:text-white rounded border border-zinc-700 transition-all cursor-pointer text-xs"
+                      className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 p-1.5 bg-zinc-900/90 text-zinc-400 hover:text-white rounded-lg border border-zinc-700 transition-all cursor-pointer text-xs"
                     >
                       {copiedId === m.id ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
                     </button>
@@ -342,9 +383,9 @@ export const AICivicWorkspace: React.FC = () => {
             })}
 
             {loading && (
-              <div className="flex items-center space-x-2 bg-zinc-950 text-zinc-300 p-3 rounded-2xl border border-zinc-800 w-52 animate-pulse text-xs">
+              <div className="flex items-center space-x-2 bg-zinc-950 text-zinc-300 p-3.5 rounded-2xl border border-zinc-800 w-60 animate-pulse text-xs">
                 <RefreshCw className="w-4 h-4 text-emerald-400 animate-spin" />
-                <span>Thinking & analyzing context...</span>
+                <span>Compiling in-depth analysis & links...</span>
               </div>
             )}
 
@@ -355,10 +396,10 @@ export const AICivicWorkspace: React.FC = () => {
           <div className="px-4 py-2 bg-zinc-950/70 border-t border-zinc-800/80 flex items-center space-x-2 overflow-x-auto text-xs font-semibold flex-shrink-0">
             <span className="text-[11px] text-zinc-500 font-mono uppercase pr-1">Try:</span>
             {[
-              'Compare Lagos vs Rivers FAAC allocation',
-              'Explain the Supreme Court LGA direct funding ruling in Pidgin',
-              'How to write an FOI letter to Ministry of Works?',
-              'Audit Governor Alex Otti road promises'
+              'Comprehensive FAAC analysis of Lagos vs Rivers',
+              'Explain Supreme Court LGA direct autonomy in Pidgin',
+              'Step-by-step FOI request guide with Section 7 default penalties',
+              'Audit Governor Alex Otti road infrastructure promises'
             ].map((prompt, pIdx) => (
               <button
                 key={pIdx}
@@ -382,7 +423,7 @@ export const AICivicWorkspace: React.FC = () => {
               type="text"
               value={inputQuery}
               onChange={e => setInputQuery(e.target.value)}
-              placeholder="Ask anything about Nigerian budgets, governors, laws, or ask follow-up questions..."
+              placeholder="Ask for an in-depth breakdown of any Nigerian budget, politician, law, or public project..."
               className="flex-1 bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3 text-xs sm:text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500 transition-colors"
             />
             <button

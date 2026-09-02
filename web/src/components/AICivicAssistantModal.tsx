@@ -3,11 +3,18 @@ import {
   Send,
   X,
   Sparkles,
-  RefreshCw
+  RefreshCw,
+  ExternalLink,
+  BookOpen
 } from 'lucide-react';
 
-
 import { callAIAsk } from '../lib/api';
+
+interface ResourceLink {
+  title: string;
+  url: string;
+  domain?: string;
+}
 
 interface AICivicAssistantModalProps {
   isOpen: boolean;
@@ -15,7 +22,7 @@ interface AICivicAssistantModalProps {
 }
 
 export const AICivicAssistantModal: React.FC<AICivicAssistantModalProps> = ({ isOpen, onClose }) => {
-  const [messages, setMessages] = useState<Array<{ sender: 'user' | 'ai'; text: string; sources?: string[] }>>([
+  const [messages, setMessages] = useState<Array<{ sender: 'user' | 'ai'; text: string; sources?: string[]; resource_links?: ResourceLink[] }>>([
     {
       sender: 'ai',
       text: (
@@ -23,7 +30,12 @@ export const AICivicAssistantModal: React.FC<AICivicAssistantModalProps> = ({ is
         "Think of me as your go-to friend for understanding Nigerian governance, public money, and citizen rights. Whether you want to trace where your state's monthly FAAC allocation went, check if a Governor kept a campaign promise, or need help drafting an FOI letter — I'm right here with you.\n\n" +
         "_Feel free to chat with me in English or freely in Nigerian Pidgin, Yoruba, Hausa, or Igbo. What would you like to investigate today?_"
       ),
-      sources: ["National Bureau of Statistics", "FAAC Technical Committee", "Supreme Court Records"]
+      sources: ["National Bureau of Statistics", "FAAC Technical Committee", "Supreme Court Records"],
+      resource_links: [
+        { title: "National Bureau of Statistics (NBS) Portal", url: "https://nigerianstat.gov.ng", domain: "nigerianstat.gov.ng" },
+        { title: "Office of the Accountant-General FAAC Portal", url: "https://oagf.gov.ng", domain: "oagf.gov.ng" },
+        { title: "Supreme Court of Nigeria Judgments", url: "https://supremecourt.gov.ng", domain: "supremecourt.gov.ng" }
+      ]
     }
   ]);
 
@@ -48,7 +60,8 @@ export const AICivicAssistantModal: React.FC<AICivicAssistantModalProps> = ({ is
         {
           sender: 'ai',
           text: data.answer,
-          sources: data.sources || ["Official Public Gazettes", "WSFU Intelligence"]
+          sources: data.sources || ["Official Public Gazettes", "WSFU Intelligence"],
+          resource_links: data.resource_links || []
         }
       ]);
     } catch {
@@ -57,6 +70,7 @@ export const AICivicAssistantModal: React.FC<AICivicAssistantModalProps> = ({ is
       setLoading(false);
     }
   };
+
 
 
   return (
@@ -124,8 +138,35 @@ export const AICivicAssistantModal: React.FC<AICivicAssistantModalProps> = ({ is
               >
                 <p className="whitespace-pre-line font-sans">{m.text}</p>
 
+                {/* Verified Clickable Resource Links */}
+                {m.resource_links && m.resource_links.length > 0 && (
+                  <div className="mt-3 pt-2.5 border-t border-zinc-800/80 space-y-1.5">
+                    <div className="flex items-center space-x-1.5 text-[10px] font-bold text-zinc-400 uppercase tracking-wider">
+                      <BookOpen className="w-3 h-3 text-emerald-400" />
+                      <span>Verified Resources for Extensive Reading:</span>
+                    </div>
+                    <div className="space-y-1 pt-0.5">
+                      {m.resource_links.map((link, lIdx) => (
+                        <a
+                          key={lIdx}
+                          href={link.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center justify-between p-2 bg-zinc-900/90 hover:bg-emerald-950/60 border border-zinc-800 hover:border-emerald-700/60 rounded-lg text-xs text-zinc-300 hover:text-emerald-300 transition-all group/link"
+                        >
+                          <div className="truncate pr-2">
+                            <span className="font-bold block truncate text-[11px]">{link.title}</span>
+                            <span className="text-[9px] text-zinc-500 font-mono">{link.domain || link.url}</span>
+                          </div>
+                          <ExternalLink className="w-3 h-3 text-zinc-500 group-hover/link:text-emerald-400 flex-shrink-0" />
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {m.sources && m.sources.length > 0 && (
-                  <div className="mt-3 pt-2.5 border-t border-zinc-800/80 flex flex-wrap items-center gap-1.5 text-[10px] text-zinc-400">
+                  <div className="mt-2.5 pt-2 border-t border-zinc-800/80 flex flex-wrap items-center gap-1 text-[10px] text-zinc-400">
                     <span className="font-mono text-zinc-500 font-bold uppercase">Sources:</span>
                     {m.sources.map((s, sIdx) => (
                       <span
@@ -140,6 +181,7 @@ export const AICivicAssistantModal: React.FC<AICivicAssistantModalProps> = ({ is
               </div>
             </div>
           ))}
+
 
           {loading && (
             <div className="flex items-center space-x-2 bg-zinc-950 text-zinc-400 p-3 rounded-2xl border border-zinc-800 w-44 animate-pulse text-xs">
