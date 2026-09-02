@@ -31,9 +31,12 @@ import {
   Cell
 } from 'recharts';
 
+import { StateComparisonMatrix } from './StateComparisonMatrix';
+
 export const FAACExplorer: React.FC = () => {
   const [states, setStates] = useState<StateData[]>([]);
   const [selectedStateCode, setSelectedStateCode] = useState('LA');
+  const [viewMode, setViewMode] = useState<'single' | 'compare'>('single');
   const [data, setData] = useState<{ state: StateData; allocations: FAACAllocation[]; lgas: LGAData[] } | null>(null);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
@@ -166,76 +169,114 @@ export const FAACExplorer: React.FC = () => {
     : [];
 
   return (
-
     <div className="space-y-8">
-      {/* Top Banner */}
-      <div className="bg-gradient-to-r from-emerald-950 via-zinc-900 to-zinc-950 border border-emerald-800/40 rounded-2xl p-6 shadow-xl">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-          <div>
-            <div className="flex items-center space-x-2 text-emerald-400 font-semibold text-xs uppercase tracking-wider mb-1">
-              <Landmark className="w-4 h-4" />
-              <span>OFFICIAL FEDERATION REVENUE TRACKER (FAAC)</span>
-            </div>
-            <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
-              Where Did Nigeria's Public Money Go?
-            </h1>
-            <p className="text-sm text-zinc-400 mt-1 max-w-2xl leading-relaxed">
-              Track Federation Account Allocation Committee (FAAC) monthly disbursements to the Federal Government, all 36 States, and 774 Local Government Councils with interactive visual charts.
-            </p>
-          </div>
+      {/* Top View Mode Switcher */}
+      <div className="flex items-center justify-between bg-zinc-900/90 border border-zinc-800 p-2 rounded-2xl">
+        <div className="flex items-center space-x-2">
+          <button
+            onClick={() => setViewMode('single')}
+            className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${
+              viewMode === 'single'
+                ? 'bg-emerald-500 text-black shadow-lg shadow-emerald-500/20'
+                : 'text-zinc-400 hover:text-white'
+            }`}
+          >
+            <Landmark className="w-4 h-4" />
+            <span>State Deep Dive</span>
+          </button>
 
-          {/* State Selector */}
-          <div className="flex-shrink-0 bg-zinc-900/90 p-3 rounded-xl border border-zinc-800">
-            <label className="block text-[11px] font-bold text-zinc-400 mb-1 uppercase tracking-wider">
-              Select State to Inspect:
-            </label>
-            <select
-              value={selectedStateCode}
-              onChange={(e) => loadStateData(e.target.value)}
-              className="w-full bg-zinc-950 border border-zinc-700 text-emerald-400 text-base font-extrabold rounded-lg px-4 py-2 focus:outline-none focus:border-emerald-500 cursor-pointer"
-            >
-              {states.map((st) => (
-                <option key={st.code} value={st.code}>
-                  {st.name} ({st.geopolitical_zone})
-                </option>
-              ))}
-            </select>
-          </div>
+          <button
+            onClick={() => setViewMode('compare')}
+            className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${
+              viewMode === 'compare'
+                ? 'bg-emerald-500 text-black shadow-lg shadow-emerald-500/20'
+                : 'text-zinc-400 hover:text-white'
+            }`}
+          >
+            <BarChart3 className="w-4 h-4" />
+            <span>State-vs-State Matrix</span>
+          </button>
         </div>
 
-        {/* National 3-Tier Summary Strip */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-6 border-t border-zinc-800/80 mt-6">
-          <div className="bg-zinc-950/80 p-3.5 rounded-xl border border-emerald-900/40 flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 font-black">
-              FG
-            </div>
-            <div>
-              <p className="text-[11px] text-zinc-400 font-semibold uppercase">Federal Government Share</p>
-              <p className="text-base font-extrabold text-white">₦743.3 Billion (52.68%)</p>
-            </div>
-          </div>
-
-          <div className="bg-zinc-950/80 p-3.5 rounded-xl border border-blue-900/40 flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 font-black">
-              ST
-            </div>
-            <div>
-              <p className="text-[11px] text-zinc-400 font-semibold uppercase">36 State Governments</p>
-              <p className="text-base font-extrabold text-white">₦377.1 Billion (26.72%)</p>
-            </div>
-          </div>
-
-          <div className="bg-zinc-950/80 p-3.5 rounded-xl border border-amber-900/40 flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 font-black">
-              LG
-            </div>
-            <div>
-              <p className="text-[11px] text-zinc-400 font-semibold uppercase">774 Local Councils</p>
-              <p className="text-base font-extrabold text-white">₦290.6 Billion (20.60%)</p>
-            </div>
-          </div>
-        </div>
+        <span className="text-[11px] text-zinc-500 font-mono hidden sm:inline pr-2">
+          {viewMode === 'single' ? 'Single State Audit' : 'Comparative Analysis'}
+        </span>
       </div>
+
+      {/* Render Comparison Matrix if active */}
+      {viewMode === 'compare' ? (
+        <StateComparisonMatrix states={states} />
+      ) : (
+        <>
+          {/* Top Banner */}
+          <div className="bg-gradient-to-r from-emerald-950 via-zinc-900 to-zinc-950 border border-emerald-800/40 rounded-2xl p-6 shadow-xl">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+              <div>
+                <div className="flex items-center space-x-2 text-emerald-400 font-semibold text-xs uppercase tracking-wider mb-1">
+                  <Landmark className="w-4 h-4" />
+                  <span>OFFICIAL FEDERATION REVENUE TRACKER (FAAC)</span>
+                </div>
+                <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+                  Where Did Nigeria's Public Money Go?
+                </h1>
+                <p className="text-sm text-zinc-400 mt-1 max-w-2xl leading-relaxed">
+                  Track Federation Account Allocation Committee (FAAC) monthly disbursements to the Federal Government, all 36 States, and 774 Local Government Councils with interactive visual charts.
+                </p>
+              </div>
+
+              {/* State Selector */}
+              <div className="flex-shrink-0 bg-zinc-900/90 p-3 rounded-xl border border-zinc-800">
+                <label className="block text-[11px] font-bold text-zinc-400 mb-1 uppercase tracking-wider">
+                  Select State to Inspect:
+                </label>
+                <select
+                  value={selectedStateCode}
+                  onChange={(e) => loadStateData(e.target.value)}
+                  className="w-full bg-zinc-950 border border-zinc-700 text-emerald-400 text-base font-extrabold rounded-lg px-4 py-2 focus:outline-none focus:border-emerald-500 cursor-pointer"
+                >
+                  {states.map((st) => (
+                    <option key={st.code} value={st.code}>
+                      {st.name} ({st.geopolitical_zone})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* National 3-Tier Summary Strip */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-6 border-t border-zinc-800/80 mt-6">
+              <div className="bg-zinc-950/80 p-3.5 rounded-xl border border-emerald-900/40 flex items-center space-x-3">
+                <div className="w-10 h-10 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 font-black">
+                  FG
+                </div>
+                <div>
+                  <p className="text-[11px] text-zinc-400 font-semibold uppercase">Federal Government Share</p>
+                  <p className="text-base font-extrabold text-white">₦743.3 Billion (52.68%)</p>
+                </div>
+              </div>
+
+              <div className="bg-zinc-950/80 p-3.5 rounded-xl border border-blue-900/40 flex items-center space-x-3">
+                <div className="w-10 h-10 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 font-black">
+                  ST
+                </div>
+                <div>
+                  <p className="text-[11px] text-zinc-400 font-semibold uppercase">36 States Share (Combined)</p>
+                  <p className="text-base font-extrabold text-white">₦377.1 Billion (26.72%)</p>
+                </div>
+              </div>
+
+              <div className="bg-zinc-950/80 p-3.5 rounded-xl border border-amber-900/40 flex items-center space-x-3">
+                <div className="w-10 h-10 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 font-black">
+                  LGA
+                </div>
+                <div>
+                  <p className="text-[11px] text-zinc-400 font-semibold uppercase">774 Local Councils Share</p>
+                  <p className="text-base font-extrabold text-white">₦290.6 Billion (20.60%)</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
 
       {/* HOW NIGERIA MAKES ITS MONEY (DETAILED FEDERATION REVENUE INFLOW ENGINE) */}
       <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 shadow-xl space-y-6">
@@ -529,6 +570,10 @@ export const FAACExplorer: React.FC = () => {
           </div>
         </div>
       ) : null}
-    </div>
+    </>
+  )}
+</div>
+
   );
 };
+

@@ -32,7 +32,54 @@ export interface RealFAACStateData {
   lgas: RealFAACLGA[];
 }
 
+export const NIGERIAN_STATE_POPULATIONS: Record<string, number> = {
+  AB: 4143000,
+  AD: 4902000,
+  AK: 6093000,
+  AN: 5937000,
+  BA: 8308000,
+  BY: 2636000,
+  BE: 6412000,
+  BO: 6865000,
+  CR: 4406000,
+  DE: 6241000,
+  EB: 3242000,
+  ED: 4777000,
+  EK: 3592000,
+  EN: 4891000,
+  FC: 3964000,
+  GO: 3968000,
+  IM: 5708000,
+  JI: 7499000,
+  KD: 9476000,
+  KN: 15926000,
+  KT: 9300000,
+  KE: 5258000,
+  KO: 4972000,
+  KW: 3598000,
+  LA: 16536000,
+  NA: 2886000,
+  NI: 6783000,
+  OG: 6379000,
+  ON: 5316000,
+  OS: 5252000,
+  OY: 8945000,
+  PL: 4717000,
+  RI: 7922000,
+  SO: 6391000,
+  TA: 3625000,
+  YO: 3792000,
+  ZA: 5317000,
+  NAT: 227000000
+};
+
+export function getPerCapitaFAAC(stateCode: string, totalGross: number): number {
+  const pop = NIGERIAN_STATE_POPULATIONS[stateCode.toUpperCase()] || 5000000;
+  return Math.round(totalGross / pop);
+}
+
 export const REAL_FAAC_DATA: Record<string, RealFAACStateData> = {
+
   "NAT": {
     "code": "NAT",
     "is_oil": false,
