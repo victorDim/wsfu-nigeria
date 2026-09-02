@@ -517,7 +517,8 @@ export async function callAIAsk(
   chat_history?: Array<{ sender: string; text: string }>
 ): Promise<any> {
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 4500);
+  // 25 second timeout to allow Render backend cold starts without prematurely aborting
+  const timeoutId = setTimeout(() => controller.abort(), 25000);
 
   try {
     const res = await fetch(`${API_BASE}/ai/ask`, {
@@ -532,13 +533,26 @@ export async function callAIAsk(
     clearTimeout(timeoutId);
   }
 
-
-  // Instant natural human response
+  // Domain-aware natural human responses when offline or during network drop
   const upper = query.toUpperCase();
   let ans = "";
   let links: Array<{ title: string; url: string; domain?: string }> = [];
 
-  if (upper.includes('LGA') || upper.includes('AUTONOMY') || upper.includes('COUNCIL')) {
+  if (upper.includes('SCHOOL') || upper.includes('EDUCATION') || upper.includes('STUDENT') || upper.includes('TEACHER') || upper.includes('ASUU') || upper.includes('UBEC')) {
+    ans = "The state of public education in Nigeria today presents a sobering, multi-dimensional crisis across primary, secondary, and tertiary tiers.\n\nAt the foundational basic education level (primary and junior secondary), the single biggest bottleneck is the Universal Basic Education Commission (UBEC) matching grant crisis. Under the law, the Federal Government sets aside 2% of the Consolidated Revenue Fund for basic education, but state governments must provide a 50% matching counterpart fund to access it. As of 2024, over ₦100 billion in matching grants remains untouched in Central Bank vaults because more than 20 state governors have failed or refused to provide their counterpart funds. Meanwhile, millions of primary school pupils in rural communities sit on bare floors with leaking zinc roofs, zero textbooks, and un-equipped laboratories.\n\nAccording to UNESCO and UNICEF figures, Nigeria still grapples with over 18 to 20 million out-of-school children — the highest concentration in Sub-Saharan Africa, heavily concentrated across the North-East and North-West geopolitical zones due to insecurity and poverty.\n\nAt the tertiary level, federal and state universities struggle with recurring funding deficits, dilapidated hostels, and brain drain ('Japa') among academic lecturers. The newly introduced Nigerian Education Loan Fund (NELFUND) represents an attempt to bridge tuition affordability, but systemic capital investment in research and modern laboratory equipment remains low compared to UNESCO's recommended 15-20% national budget benchmark (Nigeria averages around 5-8%).\n\nWhat citizens can do: Check if your State Universal Basic Education Board (SUBEB) has accessed its annual UBEC matching grant allocation, and use our FOI Generator to demand public disclosure on school rehabilitation contract awards in your constituency.";
+    links = [
+      { title: "Universal Basic Education Commission (UBEC) Portal", url: "https://ubec.gov.ng", domain: "ubec.gov.ng" },
+      { title: "National Bureau of Statistics (NBS) Education Statistics", url: "https://nigerianstat.gov.ng", domain: "nigerianstat.gov.ng" },
+      { title: "Nigerian Education Loan Fund (NELFUND)", url: "https://nelf.gov.ng", domain: "nelf.gov.ng" },
+      { title: "Tertiary Education Trust Fund (TETFund)", url: "https://tetfund.gov.ng", domain: "tetfund.gov.ng" }
+    ];
+  } else if (upper.includes('HEALTH') || upper.includes('HOSPITAL') || upper.includes('DOCTOR') || upper.includes('DRUG')) {
+    ans = "Nigeria's public healthcare system faces severe structural strain, characterized by underfunded Primary Healthcare Centers (PHCs), massive brain drain of medical personnel, and high out-of-pocket medical expenditures.\n\nOut of roughly 30,000 primary healthcare centers across the country, the National Primary Health Care Development Agency (NPHCDA) estimates that less than 20% are fully functional with reliable water, 24/7 solar electricity, essential medicines, and certified midwives. The Basic Health Care Provision Fund (BHCPF) — established under the National Health Act 2014 to allocate at least 1% of the Consolidated Revenue Fund — has improved funding, but grassroots execution in rural local government areas remains weak.\n\nFurthermore, the mass emigration of doctors and nurses to the UK, Canada, and the Middle East has reduced doctor-to-patient ratios to roughly 1 doctor per 5,000 citizens, far worse than the WHO recommended 1:600 standard.\n\nWhat you can do: Track whether your state government is remitting its counterpart contributions to the State Primary Health Care Board, and use the WSFU accountability hub to monitor health budget execution.";
+    links = [
+      { title: "National Primary Health Care Development Agency", url: "https://nphcda.gov.ng", domain: "nphcda.gov.ng" },
+      { title: "Federal Ministry of Health & Social Welfare", url: "https://health.gov.ng", domain: "health.gov.ng" }
+    ];
+  } else if (upper.includes('LGA') || upper.includes('AUTONOMY') || upper.includes('COUNCIL')) {
     ans = "To put this in real terms: for over 20 years, state governors basically operated a joint account system where they controlled and delayed the funds meant for local councils. In July 2024, the Supreme Court finally put a stop to that.\n\nHere is what actually changed on the ground for you and me:\n\nFirst, the Federation Account (FAAC) must now send monthly allocations — roughly ₦250 million to ₦450 million per LGA — directly into the council's own bank account. No governor can touch it or deduct from it anymore.\n\nSecond, if a governor refuses to hold local elections and instead appoints an illegal caretaker committee, the Federal Government is legally barred from releasing any money to that council until proper elections take place.\n\nWhy this matters: Your LGA Chairman can no longer give the excuse that 'the Governor didn't give us money' when your community clinic has no basic drugs or local roads are flooded. The money is landing straight in their hands, so the accountability pressure is directly on them.";
     links = [
       { title: "Supreme Court of Nigeria Judgments Archive", url: "https://supremecourt.gov.ng", domain: "supremecourt.gov.ng" },
@@ -551,10 +565,11 @@ export async function callAIAsk(
       { title: "Office of the Accountant-General Federation Ledgers", url: "https://oagf.gov.ng", domain: "oagf.gov.ng" }
     ];
   } else {
-    ans = "If you want to hold any public office in Nigeria accountable, the Freedom of Information (FOI) Act 2011 is arguably the sharpest tool in your hands. Under Section 1, you have an unconditional legal right to ask any ministry or agency for contract agreements, payment receipts, and project approvals without giving any personal reason.\n\nSection 4 gives them exactly 7 working days to respond. If they ignore your letter, it becomes a statutory violation under Section 7, and Section 7(5) makes it a criminal offence punishable by imprisonment for any official to deliberately conceal or destroy requested records.\n\nYou can use our WSFU FOI Generator right now to draft a formal Section 1 notice for any abandoned project in your community.";
+    ans = "When you look at governance across Nigeria today, the fundamental challenge is translating massive public appropriations into tangible improvements in citizen welfare, security, and infrastructure.\n\nUnder our constitutional framework, the key to unlocking better public delivery lies in active civic engagement: tracking capital project appropriations in the federal and state budgets, monitoring monthly federation disbursements, and using statutory mechanisms like the Freedom of Information Act 2011 to demand transparency on contract execution milestones.\n\nIf you have a specific sector, public project, state governor, or government ministry you want to investigate, feel free to ask and we will break down the numbers and verified public records together.";
     links = [
-      { title: "Freedom of Information Act 2011 Official Gazette", url: "https://justice.gov.ng/foi-unit", domain: "justice.gov.ng" },
-      { title: "Budget Office of the Federation", url: "https://budgetoffice.gov.ng", domain: "budgetoffice.gov.ng" }
+      { title: "Budget Office of the Federation", url: "https://budgetoffice.gov.ng", domain: "budgetoffice.gov.ng" },
+      { title: "National Bureau of Statistics (NBS) Data Portal", url: "https://nigerianstat.gov.ng", domain: "nigerianstat.gov.ng" },
+      { title: "Freedom of Information Act 2011 Official Gazette", url: "https://justice.gov.ng/foi-unit", domain: "justice.gov.ng" }
     ];
   }
 
@@ -565,6 +580,7 @@ export async function callAIAsk(
     model: "wsfu-human-intelligence"
   };
 }
+
 
 
 export async function callAICrossExamine(title: string, content: string, source_name: string, category: string): Promise<any> {

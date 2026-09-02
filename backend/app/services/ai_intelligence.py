@@ -59,7 +59,19 @@ def _get_verified_links_for_query(query: str) -> List[Dict[str, str]]:
     upper = query.upper()
     links = []
 
-    if any(k in upper for k in ['FAAC', 'LAGOS', 'RIVERS', 'KANO', 'MONEY', 'ALLOCATION', 'REVENUE', 'DEBT', 'BUDGET']):
+    if any(k in upper for k in ['SCHOOL', 'EDUCATION', 'STUDENT', 'TEACHER', 'ASUU', 'UBEC', 'NELFUND']):
+        links.extend([
+            {"title": "Universal Basic Education Commission (UBEC)", "url": "https://ubec.gov.ng", "domain": "ubec.gov.ng"},
+            {"title": "National Bureau of Statistics Education Data", "url": "https://nigerianstat.gov.ng", "domain": "nigerianstat.gov.ng"},
+            {"title": "Nigerian Education Loan Fund (NELFUND)", "url": "https://nelf.gov.ng", "domain": "nelf.gov.ng"},
+            {"title": "Tertiary Education Trust Fund (TETFund)", "url": "https://tetfund.gov.ng", "domain": "tetfund.gov.ng"}
+        ])
+    elif any(k in upper for k in ['HEALTH', 'HOSPITAL', 'DOCTOR', 'DRUG', 'PHC', 'CLINIC']):
+        links.extend([
+            {"title": "National Primary Health Care Development Agency", "url": "https://nphcda.gov.ng", "domain": "nphcda.gov.ng"},
+            {"title": "Federal Ministry of Health & Social Welfare", "url": "https://health.gov.ng", "domain": "health.gov.ng"}
+        ])
+    elif any(k in upper for k in ['FAAC', 'LAGOS', 'RIVERS', 'KANO', 'MONEY', 'ALLOCATION', 'REVENUE', 'DEBT', 'BUDGET']):
         links.extend([
             {"title": "National Bureau of Statistics (NBS) FAAC Portal", "url": "https://nigerianstat.gov.ng", "domain": "nigerianstat.gov.ng"},
             {"title": "Office of the Accountant-General (OAGF) Ledgers", "url": "https://oagf.gov.ng", "domain": "oagf.gov.ng"},
@@ -86,6 +98,7 @@ def _get_verified_links_for_query(query: str) -> List[Dict[str, str]]:
         ])
 
     return links
+
 
 
 async def ask_civic_assistant(query: str, chat_history: Optional[List[Dict[str, str]]] = None) -> Dict[str, Any]:
@@ -156,7 +169,22 @@ def _get_fast_local_answer(query: str) -> Dict[str, Any]:
     """In-depth, completely natural human responses."""
     upper = query.upper()
     
-    if any(k in upper for k in ['LGA', 'AUTONOMY', 'COUNCIL', 'LOCAL GOV', 'SUPREME COURT']):
+    if any(k in upper for k in ['SCHOOL', 'EDUCATION', 'STUDENT', 'TEACHER', 'ASUU', 'UBEC', 'NELFUND']):
+        answer = (
+            "The state of public education in Nigeria today presents a sobering, multi-dimensional crisis across primary, secondary, and tertiary tiers.\n\n"
+            "At the foundational basic education level (primary and junior secondary), the single biggest bottleneck is the Universal Basic Education Commission (UBEC) matching grant crisis. Under the law, the Federal Government sets aside 2% of the Consolidated Revenue Fund for basic education, but state governments must provide a 50% matching counterpart fund to access it. Over ₦100 billion in matching grants remains untouched in Central Bank vaults because more than 20 state governors have failed to provide their counterpart funds. Meanwhile, millions of primary school pupils in rural communities sit on bare floors with leaking zinc roofs, zero textbooks, and un-equipped laboratories.\n\n"
+            "According to UNESCO and UNICEF figures, Nigeria still grapples with over 18 to 20 million out-of-school children — the highest concentration in Sub-Saharan Africa, heavily concentrated across the North-East and North-West geopolitical zones.\n\n"
+            "At the tertiary level, federal and state universities struggle with recurring funding deficits, dilapidated hostels, and brain drain ('Japa') among academic lecturers. The newly introduced Nigerian Education Loan Fund (NELFUND) represents an attempt to bridge tuition affordability, but systemic capital investment in research and modern laboratory equipment remains low compared to UNESCO's recommended 15-20% national budget benchmark (Nigeria averages around 5-8%).\n\n"
+            "What citizens can do: Check if your State Universal Basic Education Board (SUBEB) has accessed its annual UBEC matching grant allocation, and use our FOI Generator to demand public disclosure on school rehabilitation contract awards in your constituency."
+        )
+    elif any(k in upper for k in ['HEALTH', 'HOSPITAL', 'DOCTOR', 'DRUG', 'PHC', 'CLINIC']):
+        answer = (
+            "Nigeria's public healthcare system faces severe structural strain, characterized by underfunded Primary Healthcare Centers (PHCs), massive brain drain of medical personnel, and high out-of-pocket medical expenditures.\n\n"
+            "Out of roughly 30,000 primary healthcare centers across the country, the National Primary Health Care Development Agency (NPHCDA) estimates that less than 20% are fully functional with reliable water, 24/7 solar electricity, essential medicines, and certified midwives. The Basic Health Care Provision Fund (BHCPF) — established under the National Health Act 2014 to allocate at least 1% of the Consolidated Revenue Fund — has improved funding, but grassroots execution in rural local government areas remains weak.\n\n"
+            "Furthermore, the mass emigration of doctors and nurses to the UK, Canada, and the Middle East has reduced doctor-to-patient ratios to roughly 1 doctor per 5,000 citizens, far worse than the WHO recommended 1:600 standard.\n\n"
+            "What you can do: Track whether your state government is remitting its counterpart contributions to the State Primary Health Care Board, and use the WSFU accountability hub to monitor health budget execution."
+        )
+    elif any(k in upper for k in ['LGA', 'AUTONOMY', 'COUNCIL', 'LOCAL GOV', 'SUPREME COURT']):
         answer = (
             "Let's put this in plain terms: for more than twenty years, state governors across Nigeria basically held local government finances in a stranglehold through what was called the State Joint Local Government Account. Governors would collect all the money coming from Abuja, give local councils peanuts for basic salaries, and keep the rest under state control. On July 11, 2024, the Supreme Court finally pulled the plug on that system.\n\n"
             "Here is how the game actually changed:\n\n"
@@ -166,6 +194,7 @@ def _get_fast_local_answer(query: str) -> Dict[str, Any]:
             "Your LGA Chairman can no longer give the old excuse that 'His Excellency hasn't released our funds' when primary health clinics have no basic malaria drugs, community boreholes pack up, or community roads are flooded. That money is landing directly in their accounts every single month.\n\n"
             "What you should do right now: Find out who your ward councillor and council chairman are, request their monthly project roadmap, and demand to see how that ₦300M+ monthly cash is being spent right inside your neighborhood."
         )
+
     elif any(k in upper for k in ['FAAC', 'LAGOS', 'RIVERS', 'KANO', 'MONEY', 'ALLOCATION', 'REVENUE', 'DEBT']):
         answer = (
             "To understand where public money in Nigeria actually goes, you have to look at the Federation Account Allocation Committee (FAAC) meeting that happens in Abuja every month. All the revenue from crude oil sales, corporate taxes collected by FIRS, import customs duties, and the VAT you pay whenever you buy goods get pooled into one giant federation vault.\n\n"
