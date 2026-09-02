@@ -533,23 +533,39 @@ export async function callAIAsk(
   }
 
 
-  // Instant local response
+  // Instant natural human response
   const upper = query.toUpperCase();
-  let ans = "🇳🇬 **WSFU Governance Intelligence:**\n\n";
-  if (upper.includes('FAAC') || upper.includes('LAGOS') || upper.includes('RIVERS') || upper.includes('MONEY')) {
-    ans += "• **FAAC Revenue:** Federation Account allocations are distributed monthly to FG (52.68%), States (26.72%), and LGAs (20.60%).\n• **Deductions:** Debt obligations are deducted at source.\n• **Per-Capita:** Spending power ranges from ₦17.6k/person/yr in Kano to ₦58k in Delta.";
-  } else if (upper.includes('LGA') || upper.includes('AUTONOMY')) {
-    ans += "• **Supreme Court Ruling:** State Governors cannot intercept direct federation funds belonging to the 774 Local Government Councils.\n• **Direct Account:** All LGA allocations are paid directly to democratically elected council accounts.";
+  let ans = "";
+  let links: Array<{ title: string; url: string; domain?: string }> = [];
+
+  if (upper.includes('LGA') || upper.includes('AUTONOMY') || upper.includes('COUNCIL')) {
+    ans = "To put this in real terms: for over 20 years, state governors basically operated a joint account system where they controlled and delayed the funds meant for local councils. In July 2024, the Supreme Court finally put a stop to that.\n\nHere is what actually changed on the ground for you and me:\n\nFirst, the Federation Account (FAAC) must now send monthly allocations — roughly ₦250 million to ₦450 million per LGA — directly into the council's own bank account. No governor can touch it or deduct from it anymore.\n\nSecond, if a governor refuses to hold local elections and instead appoints an illegal caretaker committee, the Federal Government is legally barred from releasing any money to that council until proper elections take place.\n\nWhy this matters: Your LGA Chairman can no longer give the excuse that 'the Governor didn't give us money' when your community clinic has no basic drugs or local roads are flooded. The money is landing straight in their hands, so the accountability pressure is directly on them.";
+    links = [
+      { title: "Supreme Court of Nigeria Judgments Archive", url: "https://supremecourt.gov.ng", domain: "supremecourt.gov.ng" },
+      { title: "Federal Ministry of Justice Legal Repository", url: "https://justice.gov.ng", domain: "justice.gov.ng" }
+    ];
+  } else if (upper.includes('FAAC') || upper.includes('LAGOS') || upper.includes('RIVERS') || upper.includes('MONEY')) {
+    ans = "To understand where public money in Nigeria actually goes, you have to look at the FAAC meeting that happens in Abuja every month. All the revenue from crude oil sales, corporate taxes from FIRS, customs duties, and the VAT you pay whenever you buy goods get pooled into one giant federation vault.\n\nUnder the constitutional formula, the Federal Government takes 52.68%, the 36 States share 26.72%, and the 774 LGAs share 20.60%. On top of that, oil-producing states like Rivers, Delta, and Akwa Ibom get an extra 13% derivation fund directly off mineral earnings before the rest is divided.\n\nHere is the part politicians rarely explain: if your state took heavy foreign loans in the past (like Lagos, Kaduna, or Edo), the Debt Management Office debits those loan repayments at source before sending the balance to the state account.\n\nWhat you can do: Track your state's net monthly allocation on our WSFU FAAC Explorer and compare it against your state's published budget to see if capital projects are truly being funded.";
+    links = [
+      { title: "National Bureau of Statistics (NBS) FAAC Reports", url: "https://nigerianstat.gov.ng", domain: "nigerianstat.gov.ng" },
+      { title: "Office of the Accountant-General Federation Ledgers", url: "https://oagf.gov.ng", domain: "oagf.gov.ng" }
+    ];
   } else {
-    ans += "• **FOI Act 2011:** Under Section 1 & 4, every citizen has a right to request public records from any MDA within 7 working days.\n• **Statutory Default:** Unlawful refusal is actionable in Federal High Court.";
+    ans = "If you want to hold any public office in Nigeria accountable, the Freedom of Information (FOI) Act 2011 is arguably the sharpest tool in your hands. Under Section 1, you have an unconditional legal right to ask any ministry or agency for contract agreements, payment receipts, and project approvals without giving any personal reason.\n\nSection 4 gives them exactly 7 working days to respond. If they ignore your letter, it becomes a statutory violation under Section 7, and Section 7(5) makes it a criminal offence punishable by imprisonment for any official to deliberately conceal or destroy requested records.\n\nYou can use our WSFU FOI Generator right now to draft a formal Section 1 notice for any abandoned project in your community.";
+    links = [
+      { title: "Freedom of Information Act 2011 Official Gazette", url: "https://justice.gov.ng/foi-unit", domain: "justice.gov.ng" },
+      { title: "Budget Office of the Federation", url: "https://budgetoffice.gov.ng", domain: "budgetoffice.gov.ng" }
+    ];
   }
 
   return {
     answer: ans,
     sources: ["National Bureau of Statistics", "Supreme Court of Nigeria", "FOI Act 2011"],
-    model: "wsfu-instant-engine"
+    resource_links: links,
+    model: "wsfu-human-intelligence"
   };
 }
+
 
 export async function callAICrossExamine(title: string, content: string, source_name: string, category: string): Promise<any> {
   const controller = new AbortController();

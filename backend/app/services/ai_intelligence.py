@@ -1,6 +1,6 @@
 """
-High-Speed & Detailed AI Intelligence Engine powered by Google Gemini.
-Provides in-depth, human-sounding governance analysis and verified reference web links.
+Authentic, Human-Centered Nigerian Civic Intelligence Engine powered by Google Gemini.
+Writes naturally like an experienced investigative journalist and trusted civic brother/sister.
 """
 
 import json
@@ -22,7 +22,7 @@ def _get_genai_client():
 
 
 def _sync_generate_text(prompt: str, model_name: str) -> Optional[str]:
-    """Helper to generate deep text using Gemini client with token limit."""
+    """Helper to generate text using Gemini client with token limit."""
     client = _get_genai_client()
     if not client:
         return None
@@ -31,7 +31,7 @@ def _sync_generate_text(prompt: str, model_name: str) -> Optional[str]:
         contents=prompt,
         config=types.GenerateContentConfig(
             max_output_tokens=1500,
-            temperature=0.25
+            temperature=0.4  # Slightly higher temperature for warmer, more natural human conversational flow
         )
     )
     return response.text if response else None
@@ -48,7 +48,7 @@ def _sync_generate_json(prompt: str, model_name: str) -> Optional[str]:
         config=types.GenerateContentConfig(
             response_mime_type="application/json",
             max_output_tokens=1000,
-            temperature=0.15
+            temperature=0.2
         )
     )
     return response.text if response else None
@@ -61,15 +61,15 @@ def _get_verified_links_for_query(query: str) -> List[Dict[str, str]]:
 
     if any(k in upper for k in ['FAAC', 'LAGOS', 'RIVERS', 'KANO', 'MONEY', 'ALLOCATION', 'REVENUE', 'DEBT', 'BUDGET']):
         links.extend([
-            {"title": "National Bureau of Statistics (NBS) FAAC Reports", "url": "https://nigerianstat.gov.ng", "domain": "nigerianstat.gov.ng"},
-            {"title": "Office of the Accountant-General (OAGF) Federation Ledgers", "url": "https://oagf.gov.ng", "domain": "oagf.gov.ng"},
-            {"title": "Debt Management Office (DMO) Subnational Debt Portal", "url": "https://dmo.gov.ng", "domain": "dmo.gov.ng"},
+            {"title": "National Bureau of Statistics (NBS) FAAC Portal", "url": "https://nigerianstat.gov.ng", "domain": "nigerianstat.gov.ng"},
+            {"title": "Office of the Accountant-General (OAGF) Ledgers", "url": "https://oagf.gov.ng", "domain": "oagf.gov.ng"},
+            {"title": "Debt Management Office (DMO) Subnational Records", "url": "https://dmo.gov.ng", "domain": "dmo.gov.ng"},
             {"title": "Budget Office of the Federation (BOF)", "url": "https://budgetoffice.gov.ng", "domain": "budgetoffice.gov.ng"}
         ])
     elif any(k in upper for k in ['LGA', 'AUTONOMY', 'COUNCIL', 'SUPREME COURT', 'LAW', 'CONSTITUTION']):
         links.extend([
             {"title": "Supreme Court of Nigeria Judgments Archive", "url": "https://supremecourt.gov.ng", "domain": "supremecourt.gov.ng"},
-            {"title": "Federal Ministry of Justice Portal", "url": "https://justice.gov.ng", "domain": "justice.gov.ng"},
+            {"title": "Federal Ministry of Justice Legal Repository", "url": "https://justice.gov.ng", "domain": "justice.gov.ng"},
             {"title": "National Judicial Council of Nigeria", "url": "https://njc.gov.ng", "domain": "njc.gov.ng"}
         ])
     elif any(k in upper for k in ['FOI', 'REQUEST', 'RECORD', 'MINISTRY', 'MDA', 'CONTRACT']):
@@ -90,7 +90,7 @@ def _get_verified_links_for_query(query: str) -> List[Dict[str, str]]:
 
 async def ask_civic_assistant(query: str, chat_history: Optional[List[Dict[str, str]]] = None) -> Dict[str, Any]:
     """
-    Detailed, human-sounding RAG-grounded civic assistant with multi-turn memory and verified links.
+    Detailed, deeply human RAG-grounded civic assistant with natural conversational tone.
     """
     links = _get_verified_links_for_query(query)
 
@@ -100,29 +100,27 @@ async def ask_civic_assistant(query: str, chat_history: Optional[List[Dict[str, 
         return local_data
 
     system_instruction = (
-        "You are the WSFU (Who Swear For Us) AI Civic Intelligence Partner — an authentic, brilliant, non-partisan, "
-        "and deeply knowledgeable Nigerian civic analyst, investigative journalist, and citizen mentor.\n\n"
-        "RESPONSE DEPTH & STRUCTURE REQUIREMENTS:\n"
-        "1. Give a thorough, in-depth, and well-structured answer (250 - 450 words) that leaves no ambiguity.\n"
-        "2. Break your answer into clear sections with bold headings:\n"
-        "   • 📌 **The Core Reality / Executive Summary**: Direct, plain-language answer.\n"
-        "   • 📊 **Fiscal & Statutory Breakdown**: Specific figures, statutory revenue formulas (FG 52.68%, States 26.72%, LGAs 20.60%), per-capita spending, or legal clauses.\n"
-        "   • 🌍 **On-The-Ground Citizen Impact**: How this affects market prices, roads, clinics, electricity, or schools.\n"
-        "   • 🔍 **Actionable Steps for Citizens**: What citizens can do right now (e.g., attending LGA council townhalls, submitting Section 1 FOI notices).\n"
-        "3. Tone: Warm, relatable, street-smart, and empathetic human tone. If queried in Nigerian Pidgin, reply fluently and vibrantly in Pidgin.\n"
-        "4. Always incorporate references to official gazettes, NBS, Supreme Court rulings, and DMO ledgers."
+        "You are the WSFU (Who Swear For Us) Civic Intelligence Partner. You are NOT a generic AI bot or a robotic FAQ manual. "
+        "You are a real, sharp, investigative Nigerian journalist and public finance specialist talking directly to a fellow citizen.\n\n"
+        "WRITING & TONE RULES (STRICT HUMAN VOICE):\n"
+        "1. Write in natural, flowing conversational paragraphs. Start with a direct, conversational take (e.g., 'Let's break this down honestly...', 'To put this in real perspective on the ground...').\n"
+        "2. DO NOT use rigid robotic bullet tropes like '• **Concept:** Definition'. Instead, write naturally in sentences and storytelling paragraphs with numbers woven in organically.\n"
+        "3. Explain complex fiscal jargon (FAAC sharing formula, debt deductions, Supreme Court rulings, FOI Act) using clear, real-life analogies that relate to public hospitals, market roads, fuel costs, and school infrastructure.\n"
+        "4. If the citizen writes or asks in Nigerian Pidgin, reply with authentic, warm, and natural Nigerian Pidgin English.\n"
+        "5. Connect the dots: explain not just what the policy or law says on paper, but how it actually affects politicians, contractors, and the ordinary person on the street.\n"
+        "6. Conclude with practical, realistic advice on what the citizen can do locally to verify or demand accountability."
     )
 
     # Multi-turn conversational memory injection
     history_context = ""
     if chat_history and len(chat_history) > 0:
-        history_context = "\n\n[CONVERSATION HISTORY]\n"
+        history_context = "\n\n[CONVERSATION SO FAR]\n"
         for item in chat_history[-6:]:
-            speaker = "Citizen" if item.get("sender") == "user" or item.get("role") == "user" else "WSFU AI"
+            speaker = "Citizen" if item.get("sender") == "user" or item.get("role") == "user" else "WSFU Analyst"
             history_context += f"{speaker}: {item.get('text', '')}\n"
-        history_context += "[CURRENT INQUIRY]\n"
+        history_context += "[CITIZEN'S NEW QUESTION]\n"
 
-    prompt = f"{system_instruction}{history_context}Citizen: {query}\n\nWSFU AI:"
+    prompt = f"{system_instruction}{history_context}Citizen: {query}\n\nWSFU Analyst:"
     
     primary_model = settings.GEMINI_MODEL or "gemini-2.5-flash"
     fallback_model = "gemini-1.5-flash"
@@ -155,86 +153,49 @@ async def ask_civic_assistant(query: str, chat_history: Optional[List[Dict[str, 
 
 
 def _get_fast_local_answer(query: str) -> Dict[str, Any]:
-    """In-depth verified answer when offline or during network delays."""
+    """In-depth, completely natural human responses."""
     upper = query.upper()
     
-    if any(k in upper for k in ['FAAC', 'LAGOS', 'RIVERS', 'KANO', 'MONEY', 'ALLOCATION', 'REVENUE', 'DEBT']):
+    if any(k in upper for k in ['LGA', 'AUTONOMY', 'COUNCIL', 'LOCAL GOV', 'SUPREME COURT']):
         answer = (
-            "📌 **The Core Reality / Executive Summary**\n\n"
-            "Every month, all revenues generated from crude oil sales, corporate taxes (CIT), Value Added Tax (VAT), "
-            "customs duties, and Electronic Money Transfer Levies (EMTL) are pooled into the Federation Account. "
-            "The Federation Account Allocation Committee (FAAC) meets in Abuja to divide this money among the three tiers of government.\n\n"
-            "📊 **Fiscal & Statutory Breakdown**\n\n"
-            "• **Statutory Revenue Sharing Formula:**\n"
-            "  - **Federal Government:** 52.68%\n"
-            "  - **36 State Governments:** 26.72%\n"
-            "  - **774 Local Government Councils:** 20.60%\n"
-            "• **13% Derivation Principle:** Oil-producing states (Rivers, Delta, Akwa Ibom, Bayelsa) receive an extra 13% derivation fund directly from mineral revenue before general sharing.\n"
-            "• **Multilateral Debt Deductions at Source:** States with high foreign loan exposure (such as Lagos, Kaduna, and Edo) have World Bank and AfDB debt service deductions debited at source by the Accountant General before cash is credited to state accounts.\n"
-            "• **Per-Capita Spending Power Disparity:** Delta receives roughly ₦58,000 per citizen per year in FAAC, whereas populous non-oil states like Kano and Katsina average approximately ₦17,600 to ₦21,000 per resident.\n\n"
-            "🌍 **On-The-Ground Citizen Impact**\n\n"
-            "When FAAC disbursements rise, states have the cash liquidity to pay civil service salaries, fund public hospital consumables, and maintain primary roads. However, without public procurement scrutiny, a significant portion of these disbursements gets tied up in inflated overheads rather than capital infrastructure.\n\n"
-            "🔍 **Actionable Steps for Citizens**\n\n"
-            "1. Check your state's net monthly FAAC receipt on the WSFU FAAC Tracker.\n"
-            "2. Attend local council budget hearings to verify how much your LGA Chairman received directly under the new direct allocation mandate.\n"
-            "3. Submit a formal Section 1 FOI letter to your State Ministry of Finance if capital project allocations are stalled."
+            "Let's put this in plain terms: for more than twenty years, state governors across Nigeria basically held local government finances in a stranglehold through what was called the State Joint Local Government Account. Governors would collect all the money coming from Abuja, give local councils peanuts for basic salaries, and keep the rest under state control. On July 11, 2024, the Supreme Court finally pulled the plug on that system.\n\n"
+            "Here is how the game actually changed:\n\n"
+            "First, the apex court ruled that the Federation Account Allocation Committee (FAAC) and the Accountant-General must pay monthly council allocations — which currently sit around ₦250 million to ₦450 million per LGA — straight into each council's dedicated bank account. No governor can delay or deduct from it at state level anymore.\n\n"
+            "Second, the court banned governors from disbanding elected councils to install hand-picked caretaker committees. In fact, if a state refuses to hold local government elections and tries to run councils with stooges, the Federal Government is legally barred from releasing a single kobo to those councils until proper elections happen.\n\n"
+            "Why this matters for you and me:\n\n"
+            "Your LGA Chairman can no longer give the old excuse that 'His Excellency hasn't released our funds' when primary health clinics have no basic malaria drugs, community boreholes pack up, or community roads are flooded. That money is landing directly in their accounts every single month.\n\n"
+            "What you should do right now: Find out who your ward councillor and council chairman are, request their monthly project roadmap, and demand to see how that ₦300M+ monthly cash is being spent right inside your neighborhood."
         )
-    elif any(k in upper for k in ['LGA', 'AUTONOMY', 'COUNCIL', 'SUPREME COURT']):
+    elif any(k in upper for k in ['FAAC', 'LAGOS', 'RIVERS', 'KANO', 'MONEY', 'ALLOCATION', 'REVENUE', 'DEBT']):
         answer = (
-            "📌 **The Core Reality / Executive Summary**\n\n"
-            "On July 11, 2024, the Supreme Court of Nigeria delivered a historic judgment (Suit No: SC/CV/343/2024) "
-            "affirming the complete financial autonomy of all 774 Local Government Councils across Nigeria. "
-            "The apex court outlawed the decade-long practice where State Governors seized council funds through the Joint State-Local Government Account (JAC).\n\n"
-            "📊 **Key Provisions of the Supreme Court Ruling**\n\n"
-            "• **Direct Account Disbursal:** The Federation Account Allocation Committee (FAAC) and Office of the Accountant-General must pay monthly allocations directly into the dedicated bank accounts of democratically elected council administrations.\n"
-            "• **Ban on Caretaker Committees:** State Governors have no constitutional power to dissolve elected local government councils and replace them with un-elected caretaker transition committees.\n"
-            "• **Withholding Sanction:** The Federal Government is strictly prohibited from releasing federation funds to any LGA run by appointed caretaker stooges.\n\n"
-            "🌍 **On-The-Ground Citizen Impact**\n\n"
-            "For over two decades, grassroots development suffered because Governors starved LGAs of funds. With direct funding restored, LGA Chairmen now receive between ₦250M to ₦500M directly every month. This means council chairmen can no longer blame State Governors for dilapidated primary school roofs, broken community boreholes, un-graded rural feeder roads, and un-equipped primary healthcare centers.\n\n"
-            "🔍 **Actionable Steps for Citizens**\n\n"
-            "1. Identify your local LGA Chairman and Ward Councillor.\n"
-            "2. Demand transparency on the monthly ₦300M+ council allocation by requesting the council's capital project schedule.\n"
-            "3. Report un-elected caretaker administrations to citizen accountability desks."
+            "To understand where public money in Nigeria actually goes, you have to look at the Federation Account Allocation Committee (FAAC) meeting that happens in Abuja every month. All the revenue from crude oil sales, corporate taxes collected by FIRS, import customs duties, and the VAT you pay whenever you buy goods get pooled into one giant federation vault.\n\n"
+            "Under the constitutional revenue-sharing formula, the Federal Government takes the largest chunk at 52.68%, the 36 State Governments share 26.72%, and the 774 Local Government Councils share 20.60%. On top of that, oil-producing states like Rivers, Delta, and Akwa Ibom get an additional 13% derivation fund directly off mineral earnings before the rest is shared.\n\n"
+            "Here is the part most politicians don't explain to citizens: debt deductions at source.\n\n"
+            "If your state took massive foreign loans from the World Bank or commercial Eurobonds in the past — like Lagos, Kaduna, or Edo — the Debt Management Office and Accountant-General debit those loan repayment millions automatically before the balance is sent to the state vault. So while a state might boast of a ₦20 billion gross allocation on paper, a noticeable percentage could be wiped out to service past loans.\n\n"
+            "The real disparity is in per-capita spending power. For instance, Delta State receives about ₦58,000 per citizen annually from FAAC, while populous states like Kano average around ₦17,600 to ₦20,000 per resident. That means resource management and stopping leakages in non-oil states is a life-or-death matter for public schools and rural hospitals.\n\n"
+            "What you can do: Track your state's net allocation on our WSFU FAAC Explorer and compare it against your state's published budget to see if capital infrastructure is truly getting funded."
         )
     elif any(k in upper for k in ['FOI', 'REQUEST', 'RIGHT', 'LAW', 'ACT']):
         answer = (
-            "📌 **The Core Reality / Executive Summary**\n\n"
-            "The Freedom of Information (FOI) Act 2011 gives every Nigerian citizen the unconditional, legally enforceable right "
-            "to request and obtain public records, contract documents, expenditure trails, and official information from any "
-            "government ministry, department, agency (MDA), or private entity performing public functions.\n\n"
-            "📊 **Statutory Timelines & Legal Powers**\n\n"
-            "• **Section 1 (Right of Access):** You do not need to prove any specific interest or explain why you want the public record.\n"
-            "• **Section 4 (Mandatory 7-Day Clock):** The public institution has exactly **7 working days** from the date of receipt to grant access or state lawful reasons for refusal.\n"
-            "• **Section 7 (Statutory Default & Penalties):** If an MDA refuses, ignores, or fails to respond within 7 days, it is deemed a statutory default. Section 7(5) provides that any official who unlawfully destroys or conceals requested records commits an offence punishable by imprisonment.\n"
-            "• **Section 20 (Court Action):** If denied access, you have 30 days to apply directly to the Federal High Court for a summary order of mandamus compelling immediate disclosure.\n\n"
-            "🌍 **On-The-Ground Citizen Impact**\n\n"
-            "The FOI Act is Nigeria's most potent anti-corruption weapon. Citizens have used FOI requests to uncover ghost contractor payments, track abandoned primary healthcare centers, and expose inflated road project contract variations.\n\n"
-            "🔍 **Actionable Steps for Citizens**\n\n"
-            "1. Use the WSFU FOI Generator to format a formal Section 1 legal application with statutory citations.\n"
-            "2. Submit physical copies to the Head of Institution and ensure you obtain an official 'Received' date stamp.\n"
-            "3. Log the submission in the WSFU FOI Public Scoreboard to activate the live 7-day compliance countdown."
+            "If you want to hold any public office in Nigeria accountable, the Freedom of Information (FOI) Act 2011 is arguably the sharpest tool in your arsenal. The law is very clear: public records belong to the citizens, not to the private drawers of government officials.\n\n"
+            "Under Section 1 of the Act, you have an unconditional legal right to ask any ministry, department, or agency (MDA) for contract agreements, contractor payment receipts, project approval memos, and expenditure breakdown. Crucially, you do not need to explain why you want the documents or give any personal reason.\n\n"
+            "Here is where the law has real teeth:\n\n"
+            "Section 4 gives the government institution exactly 7 working days to provide the records or give a lawful justification if it falls under narrow national security exemptions. If they ignore your letter or pretend they didn't see it after 7 working days, it automatically becomes a statutory violation under Section 7.\n\n"
+            "Even better, Section 7(5) makes it a criminal offence punishable by imprisonment for any public official to deliberately destroy, conceal, or alter requested public records. And under Section 20, you can take that default straight to the Federal High Court for a summary court order compelling them to release the documents.\n\n"
+            "How to use it today: Head over to our WSFU FOI Generator, type out the specific abandoned road or clinic project in your area, generate a formal Section 1 letter with statutory citations, and deliver it with an official receipt stamp to start the 7-day clock."
         )
     else:
         answer = (
-            "📌 **The Core Reality / Executive Summary**\n\n"
-            "Citizen accountability is the cornerstone of democratic governance in Nigeria. Under the 1999 Constitution (as amended), "
-            "sovereignty belongs to the people of Nigeria, from whom government derives all its powers and authority (Section 14(2)(a)).\n\n"
-            "📊 **Institutional & Accountability Architecture**\n\n"
-            "• **Fiscal Transparency:** Managed via the Fiscal Responsibility Act 2007 and Public Procurement Act 2007.\n"
-            "• **Anti-Corruption Agencies:** The Economic and Financial Crimes Commission (EFCC), Independent Corrupt Practices Commission (ICPC), and Code of Conduct Bureau (CCB) possess statutory powers to investigate public sector misappropriation.\n"
-            "• **Audit Mandate:** Section 85 of the Constitution mandates the Auditor-General for the Federation to audit all public accounts and submit annual compliance reports to the National Assembly.\n\n"
-            "🌍 **On-The-Ground Citizen Impact**\n\n"
-            "Active citizen monitoring prevents contract abandonment, ensures budget appropriations reflect grassroots community priorities, and holds elected officials accountable to their campaign manifesto commitments.\n\n"
-            "🔍 **Actionable Steps for Citizens**\n\n"
-            "1. Cross-examine state and federal expenditure data against verified national records.\n"
-            "2. Utilize the WSFU Promise Meter to verify infrastructure milestones in your community.\n"
-            "3. Engage with investigative reports and share fact-checked findings in local community forums."
+            "The heart of citizen accountability in Nigeria comes down to one simple constitutional truth: under Section 14(2)(a) of the 1999 Constitution, sovereignty belongs to the people, and government exists solely to serve citizen welfare and security.\n\n"
+            "Over the years, public institutions like the Auditor-General's office, the EFCC, and the ICPC were established to catch financial leakages. But without everyday citizens asking hard questions and following public expenditure trails, official audit reports often just gather dust in government archives.\n\n"
+            "Whether it is verifying if your governor actually delivered on his campaign promises, tracking where monthly state allocations are deployed, or investigating why a road contractor disappeared after receiving an advance payment — real accountability only happens when citizens refuse to be passive observers.\n\n"
+            "Take a look around the WSFU platform: explore the FAAC tracker, review the promise milestones for your state, or draft a statutory inquiry letter. If you have any specific governor, ministry, or project you want us to look into together, just let me know and we'll dig into the data."
         )
 
     return {
         "answer": answer,
         "sources": ["National Bureau of Statistics", "Supreme Court of Nigeria", "FOI Act 2011", "Fiscal Responsibility Commission"],
-        "model": "wsfu-comprehensive-engine"
+        "model": "wsfu-human-intelligence"
     }
 
 
