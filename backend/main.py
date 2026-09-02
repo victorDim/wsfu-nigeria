@@ -53,6 +53,18 @@ app.add_middleware(
 app.include_router(api_router, prefix=settings.API_V1_STR)
 
 
+@app.get("/", tags=["System"])
+def root_index():
+    return {
+        "project": settings.PROJECT_NAME,
+        "status": "online",
+        "version": "1.0.0",
+        "documentation": "/docs",
+        "health": "/health",
+        "api_v1": settings.API_V1_STR
+    }
+
+
 @app.get("/health", tags=["System"])
 @app.get("/api/v1/health", tags=["System"])
 def health_check():
@@ -61,6 +73,7 @@ def health_check():
         "project": settings.PROJECT_NAME,
         "environment": settings.ENVIRONMENT
     }
+
 
 
 
