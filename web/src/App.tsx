@@ -9,8 +9,10 @@ import { PrivacyPolicy } from './components/PrivacyPolicy';
 import { TakedownPortal } from './components/TakedownPortal';
 import { DailyDigestView } from './components/DailyDigestView';
 import { UserPreferencesModal, UserPreferences, DEFAULT_PREFERENCES } from './components/UserPreferencesModal';
+import { WhatsAppBotSimulator } from './components/WhatsAppBotSimulator';
 import { Article } from './types';
 import { fetchNewsFeed } from './lib/api';
+
 import { Flame, RefreshCw, WifiOff, Shield, Sparkles, SlidersHorizontal } from 'lucide-react';
 
 export const App: React.FC = () => {
@@ -291,7 +293,11 @@ export const App: React.FC = () => {
           </div>
         </div>
       </footer>
+
+      {/* Floating Interactive WhatsApp Civic Bot Simulator */}
+      <WhatsAppBotSimulator />
     </div>
   );
 };
+
 
