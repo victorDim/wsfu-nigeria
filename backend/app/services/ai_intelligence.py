@@ -1,6 +1,7 @@
 """
 Authentic, Human-Centered Nigerian Civic Intelligence Engine powered by Google Gemini.
-Writes naturally like an experienced investigative journalist and trusted civic brother/sister.
+Writes naturally like an experienced investigative journalist and trusted civic mentor.
+Features multi-model fallback resiliency and comprehensive civic domain intelligence.
 """
 
 import json
@@ -17,41 +18,83 @@ logger = logging.getLogger("wsfu.ai_intelligence")
 def _get_genai_client():
     """Returns initialized GenAI client if key is configured."""
     if settings.GEMINI_API_KEY:
-        return genai.Client(api_key=settings.GEMINI_API_KEY)
+        try:
+            return genai.Client(api_key=settings.GEMINI_API_KEY)
+        except Exception as e:
+            logger.error(f"Failed to initialize GenAI client: {e}")
     return None
 
 
-def _sync_generate_text(prompt: str, model_name: str) -> Optional[str]:
-    """Helper to generate text using Gemini client with token limit."""
+def _sync_generate_text(prompt: str) -> Optional[str]:
+    """Helper to generate text using Gemini client with multi-model fallback resiliency."""
     client = _get_genai_client()
     if not client:
         return None
-    response = client.models.generate_content(
-        model=model_name,
-        contents=prompt,
-        config=types.GenerateContentConfig(
-            max_output_tokens=1500,
-            temperature=0.4  # Slightly higher temperature for warmer, more natural human conversational flow
-        )
-    )
-    return response.text if response else None
+
+    # Try configured model, followed by verified stable models in Google AI Studio
+    candidates = [
+        settings.GEMINI_MODEL,
+        "gemini-2.0-flash",
+        "gemini-1.5-flash",
+        "gemini-2.5-flash",
+        "gemini-2.0-flash-exp"
+    ]
+    seen = set()
+    models_to_try = [m for m in candidates if m and not (m in seen or seen.add(m))]
+
+    for model in models_to_try:
+        try:
+            response = client.models.generate_content(
+                model=model,
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    max_output_tokens=1500,
+                    temperature=0.4
+                )
+            )
+            if response and response.text:
+                logger.info(f"Successfully generated civic AI response using model: {model}")
+                return response.text
+        except Exception as e:
+            logger.warning(f"Failed to generate with model '{model}': {e}. Trying next candidate...")
+            continue
+
+    return None
 
 
-def _sync_generate_json(prompt: str, model_name: str) -> Optional[str]:
-    """Helper to generate JSON structured output with low latency."""
+def _sync_generate_json(prompt: str) -> Optional[str]:
+    """Helper to generate JSON structured output with multi-model fallback."""
     client = _get_genai_client()
     if not client:
         return None
-    response = client.models.generate_content(
-        model=model_name,
-        contents=prompt,
-        config=types.GenerateContentConfig(
-            response_mime_type="application/json",
-            max_output_tokens=1000,
-            temperature=0.2
-        )
-    )
-    return response.text if response else None
+
+    candidates = [
+        settings.GEMINI_MODEL,
+        "gemini-2.0-flash",
+        "gemini-1.5-flash",
+        "gemini-2.5-flash"
+    ]
+    seen = set()
+    models_to_try = [m for m in candidates if m and not (m in seen or seen.add(m))]
+
+    for model in models_to_try:
+        try:
+            response = client.models.generate_content(
+                model=model,
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json",
+                    max_output_tokens=1000,
+                    temperature=0.2
+                )
+            )
+            if response and response.text:
+                return response.text
+        except Exception as e:
+            logger.warning(f"Failed to generate JSON with model '{model}': {e}. Trying next...")
+            continue
+
+    return None
 
 
 def _get_verified_links_for_query(query: str) -> List[Dict[str, str]]:
@@ -59,7 +102,14 @@ def _get_verified_links_for_query(query: str) -> List[Dict[str, str]]:
     upper = query.upper()
     links = []
 
-    if any(k in upper for k in ['SCHOOL', 'EDUCATION', 'STUDENT', 'TEACHER', 'ASUU', 'UBEC', 'NELFUND']):
+    if any(k in upper for k in ['SECURITY', 'POLICE', 'ARMY', 'MILITARY', 'BANDIT', 'TERROR', 'KIDNAP', 'INSECURITY']):
+        links.extend([
+            {"title": "Nigeria Police Force (NPF) Official Portal", "url": "https://npf.gov.ng", "domain": "npf.gov.ng"},
+            {"title": "Defence Headquarters Nigeria (DHQ)", "url": "https://defenceheadquarters.gov.ng", "domain": "defenceheadquarters.gov.ng"},
+            {"title": "Office of the National Security Adviser (ONSA)", "url": "https://nsa.gov.ng", "domain": "nsa.gov.ng"},
+            {"title": "Nigeria Security and Civil Defence Corps (NSCDC)", "url": "https://nscdc.gov.ng", "domain": "nscdc.gov.ng"}
+        ])
+    elif any(k in upper for k in ['SCHOOL', 'EDUCATION', 'STUDENT', 'TEACHER', 'ASUU', 'UBEC', 'NELFUND']):
         links.extend([
             {"title": "Universal Basic Education Commission (UBEC)", "url": "https://ubec.gov.ng", "domain": "ubec.gov.ng"},
             {"title": "National Bureau of Statistics Education Data", "url": "https://nigerianstat.gov.ng", "domain": "nigerianstat.gov.ng"},
@@ -70,6 +120,12 @@ def _get_verified_links_for_query(query: str) -> List[Dict[str, str]]:
         links.extend([
             {"title": "National Primary Health Care Development Agency", "url": "https://nphcda.gov.ng", "domain": "nphcda.gov.ng"},
             {"title": "Federal Ministry of Health & Social Welfare", "url": "https://health.gov.ng", "domain": "health.gov.ng"}
+        ])
+    elif any(k in upper for k in ['POWER', 'ELECTRICITY', 'NERC', 'GRID', 'FUEL', 'PETROL', 'NNPC', 'ENERGY']):
+        links.extend([
+            {"title": "Nigerian Electricity Regulatory Commission (NERC)", "url": "https://nerc.gov.ng", "domain": "nerc.gov.ng"},
+            {"title": "Nigerian Midstream and Downstream Petroleum Regulatory Authority (NMDPRA)", "url": "https://nmdpra.gov.ng", "domain": "nmdpra.gov.ng"},
+            {"title": "Federal Ministry of Power", "url": "https://power.gov.ng", "domain": "power.gov.ng"}
         ])
     elif any(k in upper for k in ['FAAC', 'LAGOS', 'RIVERS', 'KANO', 'MONEY', 'ALLOCATION', 'REVENUE', 'DEBT', 'BUDGET']):
         links.extend([
@@ -100,7 +156,6 @@ def _get_verified_links_for_query(query: str) -> List[Dict[str, str]]:
     return links
 
 
-
 async def ask_civic_assistant(query: str, chat_history: Optional[List[Dict[str, str]]] = None) -> Dict[str, Any]:
     """
     Detailed, deeply human RAG-grounded civic assistant with natural conversational tone.
@@ -116,12 +171,11 @@ async def ask_civic_assistant(query: str, chat_history: Optional[List[Dict[str, 
         "You are the WSFU (Who Swear For Us) Civic Intelligence Partner. You are NOT a generic AI bot or a robotic FAQ manual. "
         "You are a real, sharp, investigative Nigerian journalist and public finance specialist talking directly to a fellow citizen.\n\n"
         "WRITING & TONE RULES (STRICT HUMAN VOICE):\n"
-        "1. Write in natural, flowing conversational paragraphs. Start with a direct, conversational take (e.g., 'Let's break this down honestly...', 'To put this in real perspective on the ground...').\n"
-        "2. DO NOT use rigid robotic bullet tropes like '• **Concept:** Definition'. Instead, write naturally in sentences and storytelling paragraphs with numbers woven in organically.\n"
-        "3. Explain complex fiscal jargon (FAAC sharing formula, debt deductions, Supreme Court rulings, FOI Act) using clear, real-life analogies that relate to public hospitals, market roads, fuel costs, and school infrastructure.\n"
+        "1. Answer the user's specific inquiry directly in natural, flowing conversational paragraphs. Never drift or deviate to unrelated legal concepts unless requested.\n"
+        "2. DO NOT use rigid robotic bullet tropes like '• **Concept:** Definition'. Write naturally in prose and engaging storytelling paragraphs.\n"
+        "3. Provide realistic Nigerian figures, institutional realities, and on-the-ground facts.\n"
         "4. If the citizen writes or asks in Nigerian Pidgin, reply with authentic, warm, and natural Nigerian Pidgin English.\n"
-        "5. Connect the dots: explain not just what the policy or law says on paper, but how it actually affects politicians, contractors, and the ordinary person on the street.\n"
-        "6. Conclude with practical, realistic advice on what the citizen can do locally to verify or demand accountability."
+        "5. Conclude with realistic, practical steps on what citizens can do to verify, monitor, or demand accountability."
     )
 
     # Multi-turn conversational memory injection
@@ -134,31 +188,21 @@ async def ask_civic_assistant(query: str, chat_history: Optional[List[Dict[str, 
         history_context += "[CITIZEN'S NEW QUESTION]\n"
 
     prompt = f"{system_instruction}{history_context}Citizen: {query}\n\nWSFU Analyst:"
-    
-    primary_model = settings.GEMINI_MODEL or "gemini-2.5-flash"
-    fallback_model = "gemini-1.5-flash"
 
     try:
         text = await asyncio.wait_for(
-            asyncio.to_thread(_sync_generate_text, prompt, primary_model),
-            timeout=7.5
+            asyncio.to_thread(_sync_generate_text, prompt),
+            timeout=12.0
         )
-        if not text and primary_model != fallback_model:
-            text = await asyncio.wait_for(
-                asyncio.to_thread(_sync_generate_text, prompt, fallback_model),
-                timeout=5.0
-            )
-
         if text:
             return {
                 "answer": text,
                 "sources": ["National Bureau of Statistics (NBS)", "FAAC Sub-Committee", "Supreme Court Records", "Budget Office of the Federation"],
                 "resource_links": links,
-                "model": primary_model
+                "model": "wsfu-live-gemini"
             }
-
     except Exception as e:
-        logger.debug(f"Live AI call exceeded timeout ({e}), delivering detailed local answer.")
+        logger.warning(f"Live AI generation failed or timed out ({e}). Falling back to grounded local response.")
 
     local_data = _get_fast_local_answer(query)
     local_data["resource_links"] = links
@@ -166,10 +210,27 @@ async def ask_civic_assistant(query: str, chat_history: Optional[List[Dict[str, 
 
 
 def _get_fast_local_answer(query: str) -> Dict[str, Any]:
-    """In-depth, completely natural human responses."""
+    """In-depth, completely natural human responses for all civic domains."""
     upper = query.upper()
-    
-    if any(k in upper for k in ['SCHOOL', 'EDUCATION', 'STUDENT', 'TEACHER', 'ASUU', 'UBEC', 'NELFUND']):
+
+    if any(k in upper for k in ['SECURITY', 'POLICE', 'ARMY', 'MILITARY', 'BANDIT', 'TERROR', 'KIDNAP', 'INSECURITY']):
+        answer = (
+            "The security situation in Nigeria today is a complex, multi-front challenge shaped by regional dynamics, manpower deficits, and deep-seated fiscal opacity.\n\n"
+            "Across the geopolitical zones, the nature of insecurity varies significantly:\n"
+            "In the North-West and North-Central, rural banditry, mass abductions along highway corridors, and violent farmer-herder clashes continue to disrupt agricultural supply chains and food security. In the North-East, the military continues counter-insurgency operations against ISWAP and Boko Haram remnants around the Lake Chad basin. In the South-East, non-state armed groups enforce coercive sit-at-home orders, while the South-South deals with sophisticated crude oil theft and pipeline sabotage that costs the country hundreds of thousands of barrels per day.\n\n"
+            "Why has throwing trillions of Naira at security not solved it?\n\n"
+            "First, the Nigeria Police Force remains severely under-strength with roughly 370,000 officers serving over 220 million citizens — and a staggering portion of these officers are assigned to VIP protection for politicians and business elites rather than community policing.\n\n"
+            "Second is the issue of un-audited 'Security Votes'. State Governors collect billions of Naira annually under the guise of security votes without legislative oversight or public procurement scrutiny. Despite the Defence and Police budget taking over ₦3.2 trillion in the 2024 appropriation, frontline soldiers and police personnel frequently raise alarms over delayed allowances, obsolete tactical equipment, and poor welfare.\n\n"
+            "What citizens can do: Demand total audit transparency on state security votes from your State House of Assembly, and support institutional calls for state and community policing with strict constitutional safeguards."
+        )
+    elif any(k in upper for k in ['POWER', 'ELECTRICITY', 'NERC', 'GRID', 'FUEL', 'PETROL', 'NNPC', 'ENERGY']):
+        answer = (
+            "Nigeria's energy crisis operates on a dual bottleneck: a fragile national electrical grid and high fuel costs following the removal of the petrol subsidy.\n\n"
+            "On the power grid side, despite having over 13,000 MW of installed generation capacity, the national grid regularly collapses and averages only 4,000 MW to 4,500 MW of actual wheeled electricity. The fundamental issues are gas supply debt to Generation Companies (GenCos), dilapidated transmission line infrastructure under the Transmission Company of Nigeria (TCN), and high collection losses by Distribution Companies (DisCos).\n\n"
+            "The enactment of the Electricity Act 2023 was a major constitutional milestone: it broke the federal monopoly and empowered State Governments to establish their own electricity regulatory commissions (like Lagos, Enugu, and Ondo) to generate and distribute power independently.\n\n"
+            "What you can do: Track whether your state has established its State Electricity Regulatory Board to attract off-grid IPP solar and gas investments to your community."
+        )
+    elif any(k in upper for k in ['SCHOOL', 'EDUCATION', 'STUDENT', 'TEACHER', 'ASUU', 'UBEC', 'NELFUND']):
         answer = (
             "The state of public education in Nigeria today presents a sobering, multi-dimensional crisis across primary, secondary, and tertiary tiers.\n\n"
             "At the foundational basic education level (primary and junior secondary), the single biggest bottleneck is the Universal Basic Education Commission (UBEC) matching grant crisis. Under the law, the Federal Government sets aside 2% of the Consolidated Revenue Fund for basic education, but state governments must provide a 50% matching counterpart fund to access it. Over ₦100 billion in matching grants remains untouched in Central Bank vaults because more than 20 state governors have failed to provide their counterpart funds. Meanwhile, millions of primary school pupils in rural communities sit on bare floors with leaking zinc roofs, zero textbooks, and un-equipped laboratories.\n\n"
@@ -190,11 +251,9 @@ def _get_fast_local_answer(query: str) -> Dict[str, Any]:
             "Here is how the game actually changed:\n\n"
             "First, the apex court ruled that the Federation Account Allocation Committee (FAAC) and the Accountant-General must pay monthly council allocations — which currently sit around ₦250 million to ₦450 million per LGA — straight into each council's dedicated bank account. No governor can delay or deduct from it at state level anymore.\n\n"
             "Second, the court banned governors from disbanding elected councils to install hand-picked caretaker committees. In fact, if a state refuses to hold local government elections and tries to run councils with stooges, the Federal Government is legally barred from releasing a single kobo to those councils until proper elections happen.\n\n"
-            "Why this matters for you and me:\n\n"
-            "Your LGA Chairman can no longer give the old excuse that 'His Excellency hasn't released our funds' when primary health clinics have no basic malaria drugs, community boreholes pack up, or community roads are flooded. That money is landing directly in their accounts every single month.\n\n"
+            "Why this matters for you and me: Your LGA Chairman can no longer give the old excuse that 'His Excellency hasn't released our funds' when primary health clinics have no basic malaria drugs, community boreholes pack up, or community roads are flooded. That money is landing directly in their accounts every single month.\n\n"
             "What you should do right now: Find out who your ward councillor and council chairman are, request their monthly project roadmap, and demand to see how that ₦300M+ monthly cash is being spent right inside your neighborhood."
         )
-
     elif any(k in upper for k in ['FAAC', 'LAGOS', 'RIVERS', 'KANO', 'MONEY', 'ALLOCATION', 'REVENUE', 'DEBT']):
         answer = (
             "To understand where public money in Nigeria actually goes, you have to look at the Federation Account Allocation Committee (FAAC) meeting that happens in Abuja every month. All the revenue from crude oil sales, corporate taxes collected by FIRS, import customs duties, and the VAT you pay whenever you buy goods get pooled into one giant federation vault.\n\n"
@@ -208,17 +267,14 @@ def _get_fast_local_answer(query: str) -> Dict[str, Any]:
         answer = (
             "If you want to hold any public office in Nigeria accountable, the Freedom of Information (FOI) Act 2011 is arguably the sharpest tool in your arsenal. The law is very clear: public records belong to the citizens, not to the private drawers of government officials.\n\n"
             "Under Section 1 of the Act, you have an unconditional legal right to ask any ministry, department, or agency (MDA) for contract agreements, contractor payment receipts, project approval memos, and expenditure breakdown. Crucially, you do not need to explain why you want the documents or give any personal reason.\n\n"
-            "Here is where the law has real teeth:\n\n"
-            "Section 4 gives the government institution exactly 7 working days to provide the records or give a lawful justification if it falls under narrow national security exemptions. If they ignore your letter or pretend they didn't see it after 7 working days, it automatically becomes a statutory violation under Section 7.\n\n"
-            "Even better, Section 7(5) makes it a criminal offence punishable by imprisonment for any public official to deliberately destroy, conceal, or alter requested public records. And under Section 20, you can take that default straight to the Federal High Court for a summary court order compelling them to release the documents.\n\n"
+            "Section 4 gives the government institution exactly 7 working days to provide the records. If they ignore your letter after 7 working days, it automatically becomes a statutory violation under Section 7, and Section 7(5) makes it a criminal offence punishable by imprisonment for any public official to deliberately conceal or destroy requested records.\n\n"
             "How to use it today: Head over to our WSFU FOI Generator, type out the specific abandoned road or clinic project in your area, generate a formal Section 1 letter with statutory citations, and deliver it with an official receipt stamp to start the 7-day clock."
         )
     else:
         answer = (
-            "The heart of citizen accountability in Nigeria comes down to one simple constitutional truth: under Section 14(2)(a) of the 1999 Constitution, sovereignty belongs to the people, and government exists solely to serve citizen welfare and security.\n\n"
-            "Over the years, public institutions like the Auditor-General's office, the EFCC, and the ICPC were established to catch financial leakages. But without everyday citizens asking hard questions and following public expenditure trails, official audit reports often just gather dust in government archives.\n\n"
-            "Whether it is verifying if your governor actually delivered on his campaign promises, tracking where monthly state allocations are deployed, or investigating why a road contractor disappeared after receiving an advance payment — real accountability only happens when citizens refuse to be passive observers.\n\n"
-            "Take a look around the WSFU platform: explore the FAAC tracker, review the promise milestones for your state, or draft a statutory inquiry letter. If you have any specific governor, ministry, or project you want us to look into together, just let me know and we'll dig into the data."
+            f"When looking at governance in Nigeria regarding '{query}', the fundamental civic objective is ensuring public transparency, fiscal discipline, and direct accountability to the citizens.\n\n"
+            "Under our constitutional framework, every public institution and political officeholder is funded by public revenues derived from taxes, mineral resources, and national tariffs. Real accountability requires citizens to scrutinize capital budget appropriations, track public procurement contract awards, and demand measurable results rather than political rhetoric.\n\n"
+            "Feel free to ask for specific budget breakdowns, state-by-state comparisons, or legal statutory provisions regarding this topic, and we will dive straight into the verified records."
         )
 
     return {
@@ -253,8 +309,8 @@ Return JSON only:
 """
     try:
         raw_json = await asyncio.wait_for(
-            asyncio.to_thread(_sync_generate_json, prompt, settings.GEMINI_MODEL or "gemini-2.5-flash"),
-            timeout=3.5
+            asyncio.to_thread(_sync_generate_json, prompt),
+            timeout=5.0
         )
         if raw_json:
             return json.loads(raw_json)
@@ -304,8 +360,8 @@ Return JSON only:
 """
     try:
         raw_json = await asyncio.wait_for(
-            asyncio.to_thread(_sync_generate_json, prompt, settings.GEMINI_MODEL or "gemini-2.5-flash"),
-            timeout=3.5
+            asyncio.to_thread(_sync_generate_json, prompt),
+            timeout=5.0
         )
         if raw_json:
             return json.loads(raw_json)
