@@ -29,15 +29,10 @@ export const AICivicAssistantModal: React.FC<AICivicAssistantModalProps> = ({ is
         "👋 **Hello! I'm your WSFU Civic Intelligence Partner.**\n\n" +
         "Think of me as your go-to friend for understanding Nigerian governance, public money, and citizen rights. Whether you want to trace where your state's monthly FAAC allocation went, check if a Governor kept a campaign promise, or need help drafting an FOI letter — I'm right here with you.\n\n" +
         "_Feel free to chat with me in English or freely in Nigerian Pidgin, Yoruba, Hausa, or Igbo. What would you like to investigate today?_"
-      ),
-      sources: ["National Bureau of Statistics", "FAAC Technical Committee", "Supreme Court Records"],
-      resource_links: [
-        { title: "National Bureau of Statistics (NBS) Portal", url: "https://nigerianstat.gov.ng", domain: "nigerianstat.gov.ng" },
-        { title: "Office of the Accountant-General FAAC Portal", url: "https://oagf.gov.ng", domain: "oagf.gov.ng" },
-        { title: "Supreme Court of Nigeria Judgments", url: "https://supremecourt.gov.ng", domain: "supremecourt.gov.ng" }
-      ]
+      )
     }
   ]);
+
 
   const [inputQuery, setInputQuery] = useState('');
   const [loading, setLoading] = useState(false);
@@ -164,23 +159,10 @@ export const AICivicAssistantModal: React.FC<AICivicAssistantModalProps> = ({ is
                     </div>
                   </div>
                 )}
-
-                {m.sources && m.sources.length > 0 && (
-                  <div className="mt-2.5 pt-2 border-t border-zinc-800/80 flex flex-wrap items-center gap-1 text-[10px] text-zinc-400">
-                    <span className="font-mono text-zinc-500 font-bold uppercase">Sources:</span>
-                    {m.sources.map((s, sIdx) => (
-                      <span
-                        key={sIdx}
-                        className="px-1.5 py-0.5 bg-zinc-900 border border-zinc-800 rounded text-emerald-400 font-medium"
-                      >
-                        {s}
-                      </span>
-                    ))}
-                  </div>
-                )}
               </div>
             </div>
           ))}
+
 
 
           {loading && (

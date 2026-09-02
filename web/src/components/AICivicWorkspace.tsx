@@ -51,15 +51,9 @@ const DEFAULT_WELCOME_MESSAGE: ChatMessage = {
     "• **Draft Statutory Legal Notices:** Polished Section 1 FOI requests for official public records.\n\n" +
     "_Feel free to chat with me in English or freely in Nigerian Pidgin, Yoruba, Hausa, or Igbo. What would you like to investigate today?_"
   ),
-  timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-  sources: ["National Bureau of Statistics", "FAAC Technical Committee", "Supreme Court Records", "FOI Act 2011"],
-  resource_links: [
-    { title: "National Bureau of Statistics (NBS) Portal", url: "https://nigerianstat.gov.ng", domain: "nigerianstat.gov.ng" },
-    { title: "Office of the Accountant-General FAAC Reports", url: "https://oagf.gov.ng", domain: "oagf.gov.ng" },
-    { title: "Supreme Court of Nigeria Judgments Archive", url: "https://supremecourt.gov.ng", domain: "supremecourt.gov.ng" },
-    { title: "Federal Ministry of Justice FOI Unit", url: "https://justice.gov.ng", domain: "justice.gov.ng" }
-  ]
+  timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
 };
+
 
 export const AICivicWorkspace: React.FC = () => {
   const [sessions, setSessions] = useState<ChatSession[]>(() => {
@@ -354,23 +348,9 @@ export const AICivicWorkspace: React.FC = () => {
                       </div>
                     )}
 
-                    {/* Sources Badge Strip */}
-                    {m.sources && m.sources.length > 0 && (
-                      <div className="mt-3 pt-2.5 border-t border-zinc-800/60 flex flex-wrap items-center gap-1.5 text-[10px] text-zinc-400">
-                        <span className="font-mono text-zinc-500 font-bold uppercase">Authorities:</span>
-                        {m.sources.map((src, sIdx) => (
-                          <span
-                            key={sIdx}
-                            className="px-2 py-0.5 bg-zinc-900 border border-zinc-800 rounded-md text-emerald-400 font-medium"
-                          >
-                            {src}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-
                     {/* Copy Button */}
                     <button
+
                       onClick={() => handleCopy(m.text, m.id)}
                       title="Copy response"
                       className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 p-1.5 bg-zinc-900/90 text-zinc-400 hover:text-white rounded-lg border border-zinc-700 transition-all cursor-pointer text-xs"

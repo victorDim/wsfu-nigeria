@@ -2,6 +2,7 @@
 Authentic, Human-Centered Nigerian Civic & International Intelligence Engine powered by Google Gemini.
 Encyclopedic knowledge on Nigerian governance, citizen welfare, macroeconomic policy,
 and global foreign relations (ECOWAS, African Union, AfCFTA, UN, bilateral diplomacy, diaspora affairs).
+Provides direct, uncluttered conversational answers — links & citations provided only when requested.
 """
 
 import json
@@ -98,8 +99,14 @@ def _sync_generate_json(prompt: str) -> Optional[str]:
 
 
 def _get_verified_links_for_query(query: str) -> List[Dict[str, str]]:
-    """Returns curated verified Nigerian governance and international relations links tailored to the question."""
+    """Returns curated verified Nigerian governance and international relations links ONLY when requested."""
     upper = query.upper()
+    
+    # Check if user explicitly asked for links or sources
+    is_link_requested = any(k in upper for k in ['LINK', 'SOURCE', 'PORTAL', 'WEBSITE', 'URL', 'READ MORE', 'REFERENCE', 'DOCUMENT', 'GAZETTE', 'CITATION', 'WHERE CAN I'])
+    if not is_link_requested:
+        return []
+
     links = []
 
     # International Relations, Foreign Policy, ECOWAS, AU, Diaspora, Global Affairs
@@ -174,7 +181,6 @@ def _get_verified_links_for_query(query: str) -> List[Dict[str, str]]:
         links.extend([
             {"title": "National Bureau of Statistics (NBS) Data Portal", "url": "https://nigerianstat.gov.ng", "domain": "nigerianstat.gov.ng"},
             {"title": "Budget Office of the Federation", "url": "https://budgetoffice.gov.ng", "domain": "budgetoffice.gov.ng"},
-            {"title": "Premium Times Nigeria Investigative Bureau", "url": "https://premiumtimesng.com", "domain": "premiumtimesng.com"},
             {"title": "Ministry of Foreign Affairs Nigeria", "url": "https://foreignaffairs.gov.ng", "domain": "foreignaffairs.gov.ng"}
         ])
 
@@ -183,14 +189,15 @@ def _get_verified_links_for_query(query: str) -> List[Dict[str, str]]:
 
 async def ask_civic_assistant(query: str, chat_history: Optional[List[Dict[str, str]]] = None) -> Dict[str, Any]:
     """
-    Detailed, deeply human RAG-grounded civic assistant with natural conversational tone
-    covering domestic governance, citizen welfare, and international foreign relations.
+    Detailed, deeply human RAG-grounded civic assistant with natural conversational tone.
+    Gives direct, uncluttered responses without unsolicited links or authority tags.
     """
     links = _get_verified_links_for_query(query)
 
     if not settings.GEMINI_API_KEY:
         local_data = _get_fast_local_answer(query)
-        local_data["resource_links"] = links
+        if links:
+            local_data["resource_links"] = links
         return local_data
 
     system_instruction = (
@@ -198,15 +205,14 @@ async def ask_civic_assistant(query: str, chat_history: Optional[List[Dict[str, 
         "You possess encyclopedic, forensic, and real-time knowledge of Nigeria, its 36 states, 774 Local Government Areas, "
         "its citizens' economic realities, historical context, constitutional laws, and international foreign relations.\n\n"
         "CORE INSTRUCTIONS:\n"
-        "1. ANSWER ANY QUESTION DIRECTLY & FORENSICALLY: Whether the user asks about domestic budget allocations, LGA autonomy, schools, hospitals, "
-        "minimum wage, security votes, regional conflicts, foreign policy doctrines, ECOWAS/Sahel geopolitical dynamics, AfCFTA trade, "
-        "bilateral relations with the US, China, UK, or EU, or diaspora affairs — give a thorough, accurate, and deeply insightful response.\n"
+        "1. ANSWER DIRECTLY & CONVERSATIONALLY: Provide a direct, natural, and insightful answer to the user's specific inquiry. "
+        "Do NOT attach unnecessary boilerplate, source lists, or link dumps unless the user specifically asks for sources or links.\n"
         "2. NATURAL, HUMAN & AUTHORITATIVE VOICE: Speak like a seasoned, brilliant Nigerian investigative journalist and foreign policy analyst. "
         "Write in rich, flowing conversational paragraphs. Avoid rigid, robotic bullet point tropes (e.g. do not write '• **Term:** Definition').\n"
         "3. GROUNDED IN CONCRETE DATA & STATUTES: Seamlessly weave in verified facts, constitutional provisions (1999 Constitution as amended), "
         "statutory acts (FOI Act 2011, Procurement Act 2007, Electricity Act 2023, Petroleum Industry Act 2021), NBS data, and official treaties.\n"
         "4. CULTURAL & LINGUISTIC ADAPTABILITY: If the citizen asks in Nigerian Pidgin, Yoruba, Hausa, or Igbo, reply fluently and respectfully in authentic Nigerian Pidgin/local vernacular.\n"
-        "5. PRACTICAL CITIZEN PERSPECTIVE: Always connect political and geopolitical moves to what they mean for the ordinary citizen's pocket, security, cost of living, and democratic rights."
+        "5. PRACTICAL CITIZEN PERSPECTIVE: Connect political and geopolitical moves to what they mean for the ordinary citizen's pocket, security, cost of living, and democratic rights."
     )
 
     # Multi-turn conversational memory injection
@@ -226,17 +232,19 @@ async def ask_civic_assistant(query: str, chat_history: Optional[List[Dict[str, 
             timeout=14.0
         )
         if text:
-            return {
+            res: Dict[str, Any] = {
                 "answer": text,
-                "sources": ["National Bureau of Statistics (NBS)", "Ministry of Foreign Affairs", "Supreme Court Records", "Budget Office of the Federation"],
-                "resource_links": links,
                 "model": "wsfu-live-intelligence"
             }
+            if links:
+                res["resource_links"] = links
+            return res
     except Exception as e:
         logger.warning(f"Live AI generation failed or timed out ({e}). Falling back to grounded local response.")
 
     local_data = _get_fast_local_answer(query)
-    local_data["resource_links"] = links
+    if links:
+        local_data["resource_links"] = links
     return local_data
 
 
@@ -338,7 +346,6 @@ def _get_fast_local_answer(query: str) -> Dict[str, Any]:
 
     return {
         "answer": answer,
-        "sources": ["National Bureau of Statistics", "Ministry of Foreign Affairs", "Supreme Court of Nigeria", "FOI Act 2011"],
         "model": "wsfu-human-intelligence"
     }
 
