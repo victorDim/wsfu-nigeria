@@ -300,28 +300,26 @@ def _get_fast_local_answer(query: str) -> Dict[str, Any]:
     """In-depth, completely natural human responses for all civic and international domains."""
     upper = query.upper()
 
-    # International Relations & Foreign Policy
-    if any(k in upper for k in ['INTERNATIONAL', 'FOREIGN', 'ECOWAS', 'AFRICA', 'AU', 'DIPLOMACY', 'DIASPORA', 'SAHEL', 'NIGER', 'NIDCOM', 'EMBASSY', 'PASSPORT', 'VISA', 'TRADE', 'BRICS', 'UN', 'AMERICA', 'CHINA', 'UK', 'RELATION']):
+    # 1. LGA Autonomy & Supreme Court Domain
+    if any(k in upper for k in ['LGA', 'AUTONOMY', 'COUNCIL', 'LOCAL GOV', 'SUPREME COURT']):
         answer = (
-            "Nigeria's foreign policy and international relations have historically been guided by an 'Afrocentric' doctrine — placing Africa at the center of national security, diplomacy, and trade. However, in today's shifting global order, Nigeria's international engagement is navigating high-stakes geopolitical tests across West Africa and the wider world.\n\n"
-            "At the regional level within ECOWAS (the Economic Community of West African States), Nigeria has long served as the economic and military anchor, previously leading ECOMOG peacekeeping interventions in Liberia and Sierra Leone. Following military coups in neighboring Niger, Mali, and Burkina Faso, relations became strained under ECOWAS sanctions, leading those three countries to form the Alliance of Sahel States (AES) and threaten withdrawal from ECOWAS. Nigeria's diplomatic priority has since shifted toward constructive engagement to prevent regional disintegration and preserve border trade.\n\n"
-            "On continental trade, Nigeria is a key signatory to the African Continental Free Trade Area (AfCFTA), which creates a single market of 1.3 billion people. Maximizing AfCFTA benefits requires fixing port congestion, resolving non-tariff barriers, and expanding domestic manufacturing beyond crude oil exports.\n\n"
-            "On the global stage, Nigeria maintains non-aligned strategic partnerships:\n"
-            "• With China: Heavy infrastructure financing (railways, deep seaports like Lekki Port, and airport terminals) alongside bilateral currency swap agreements.\n"
-            "• With the US, UK, and European Union: Crucial defense cooperation, intelligence sharing against maritime piracy in the Gulf of Guinea, and foreign direct investment.\n"
-            "• In Multilateral Forums: Active membership in the United Nations, African Union, Commonwealth, and growing engagement with the BRICS alliance as a partner country to expand non-dollar trade settlement.\n\n"
-            "Diaspora Dynamics: Over 15 million Nigerians in the diaspora remit over $20 billion annually through the Central Bank's remittance corridors, exceeding official foreign direct investment. Through the Nigerians in Diaspora Commission (NiDCOM), citizens abroad continue to advocate for diaspora voting rights, passport consular improvements, and investment protection."
+            "Let's put this in plain terms: for more than twenty years, state governors across Nigeria basically held local government finances in a stranglehold through what was called the State Joint Local Government Account. Governors would collect all the money coming from Abuja, give local councils peanuts for basic salaries, and keep the rest under state control. On July 11, 2024, the Supreme Court finally pulled the plug on that system.\n\n"
+            "Here is how the game actually changed:\n\n"
+            "First, the apex court ruled that the Federation Account Allocation Committee (FAAC) and the Accountant-General must pay monthly council allocations — which currently sit around ₦250 million to ₦450 million per LGA — straight into each council's dedicated bank account. No governor can delay or deduct from it at state level anymore.\n\n"
+            "Second, the court banned governors from disbanding elected councils to install hand-picked caretaker committees. In fact, if a state refuses to hold local government elections and tries to run councils with stooges, the Federal Government is legally barred from releasing a single kobo to those councils until proper elections happen.\n\n"
+            "Why this matters for you and me: Your LGA Chairman can no longer give the old excuse that 'His Excellency hasn't released our funds' when primary health clinics have no basic malaria drugs, community boreholes pack up, or community roads are flooded. That money is landing directly in their accounts every single month.\n\n"
+            "What you should do right now: Find out who your ward councillor and council chairman are, request their monthly project roadmap, and demand to see how that ₦300M+ monthly cash is being spent right inside your neighborhood."
         )
-    # Citizen Economy, Minimum Wage, Inflation
-    elif any(k in upper for k in ['INFLATION', 'ECONOMY', 'NAIRA', 'DOLLAR', 'FX', 'MINIMUM WAGE', 'WAGE', 'SALARY', 'NLC', 'TUC', 'POVERTY', 'PRICE', 'TAX', 'FIRS', 'CBN']):
+    # 2. Education & Schools Domain
+    elif any(k in upper for k in ['SCHOOL', 'EDUCATION', 'STUDENT', 'TEACHER', 'ASUU', 'UBEC', 'NELFUND', 'TETFUND']):
         answer = (
-            "Nigeria's macroeconomic landscape is undergoing its most profound structural realignment in decades, primarily driven by two twin fiscal shocks: the complete removal of the petrol subsidy and the unification of the foreign exchange rate.\n\n"
-            "While these reforms eliminated trillions in arbitrage and boosted monthly Federation Account revenues to record levels (often exceeding ₦1.2 trillion monthly), they triggered headline inflation to historic highs, driven by soaring food prices and transportation costs.\n\n"
-            "To cushion the impact on the Nigerian workforce, the Federal Government and organized labor (NLC and TUC) enacted the National Minimum Wage Act 2024, raising the statutory national minimum wage from ₦30,000 to ₦70,000 per month with a mandatory three-year review cycle. However, the critical implementation battle is at the subnational level: several state governments and private sector employers have cited fiscal constraints in adopting the new wage baseline.\n\n"
-            "On fiscal and tax policy, the Presidential Committee on Fiscal Policy and Tax Reforms has proposed consolidating over 60 disparate taxes into single-digit collection streams to relieve micro-businesses while eliminating withholding taxes for low-income earners.\n\n"
-            "What citizens can do: Monitor whether your State Governor has officially commenced implementation of the ₦70,000 minimum wage and consequential adjustments for civil servants on the WSFU Wage Tracker."
+            "The state of public education in Nigeria today presents a sobering, multi-dimensional crisis across primary, secondary, and tertiary tiers.\n\n"
+            "At the foundational basic education level (primary and junior secondary), the single biggest bottleneck is the Universal Basic Education Commission (UBEC) matching grant crisis. Under the law, the Federal Government sets aside 2% of the Consolidated Revenue Fund for basic education, but state governments must provide a 50% matching counterpart fund to access it. Over ₦100 billion in matching grants remains untouched in Central Bank vaults because more than 20 state governors have failed to provide their counterpart funds. Meanwhile, millions of primary school pupils in rural communities sit on bare floors with leaking zinc roofs, zero textbooks, and un-equipped laboratories.\n\n"
+            "According to UNESCO and UNICEF figures, Nigeria still grapples with over 18 to 20 million out-of-school children — the highest concentration in Sub-Saharan Africa, heavily concentrated across the North-East and North-West geopolitical zones.\n\n"
+            "At the tertiary level, federal and state universities struggle with recurring funding deficits, dilapidated hostels, and brain drain ('Japa') among academic lecturers. The newly introduced Nigerian Education Loan Fund (NELFUND) represents an attempt to bridge tuition affordability, but systemic capital investment in research and modern laboratory equipment remains low compared to UNESCO's recommended 15-20% national budget benchmark (Nigeria averages around 5-8%).\n\n"
+            "What citizens can do: Check if your State Universal Basic Education Board (SUBEB) has accessed its annual UBEC matching grant allocation, and use our FOI Generator to demand public disclosure on school rehabilitation contract awards in your constituency."
         )
-    # Security Domain
+    # 3. Security & Defense Domain
     elif any(k in upper for k in ['SECURITY', 'POLICE', 'ARMY', 'MILITARY', 'BANDIT', 'TERROR', 'KIDNAP', 'INSECURITY', 'DEFENCE']):
         answer = (
             "The security situation in Nigeria today is a complex, multi-front challenge shaped by regional dynamics, manpower deficits, and deep-seated fiscal opacity.\n\n"
@@ -332,7 +330,16 @@ def _get_fast_local_answer(query: str) -> Dict[str, Any]:
             "Second is the issue of un-audited 'Security Votes'. State Governors collect billions of Naira annually under the guise of security votes without legislative oversight or public procurement scrutiny. Despite the Defence and Police budget taking over ₦3.2 trillion in the 2024 appropriation, frontline soldiers and police personnel frequently raise alarms over delayed allowances, obsolete tactical equipment, and poor welfare.\n\n"
             "What citizens can do: Demand total audit transparency on state security votes from your State House of Assembly, and support institutional calls for state and community policing with strict constitutional safeguards."
         )
-    # Power & Energy Domain
+    # 4. Economy, Minimum Wage & Inflation
+    elif any(k in upper for k in ['INFLATION', 'ECONOMY', 'ECONOMIC', 'NAIRA', 'DOLLAR', 'FX', 'MINIMUM WAGE', 'WAGE', 'SALARY', 'NLC', 'TUC', 'POVERTY', 'PRICE', 'TAX', 'FIRS', 'CBN']):
+        answer = (
+            "Nigeria's macroeconomic landscape is undergoing its most profound structural realignment in decades, primarily driven by two twin fiscal shocks: the complete removal of the petrol subsidy and the unification of the foreign exchange rate.\n\n"
+            "While these reforms eliminated trillions in arbitrage and boosted monthly Federation Account revenues to record levels (often exceeding ₦1.2 trillion monthly), they triggered headline inflation to historic highs, driven by soaring food prices and transportation costs.\n\n"
+            "To cushion the impact on the Nigerian workforce, the Federal Government and organized labor (NLC and TUC) enacted the National Minimum Wage Act 2024, raising the statutory national minimum wage from ₦30,000 to ₦70,000 per month with a mandatory three-year review cycle. However, the critical implementation battle is at the subnational level: several state governments and private sector employers have cited fiscal constraints in adopting the new wage baseline.\n\n"
+            "On fiscal and tax policy, the Presidential Committee on Fiscal Policy and Tax Reforms has proposed consolidating over 60 disparate taxes into single-digit collection streams to relieve micro-businesses while eliminating withholding taxes for low-income earners.\n\n"
+            "What citizens can do: Monitor whether your State Governor has officially commenced implementation of the ₦70,000 minimum wage and consequential adjustments for civil servants on the WSFU Wage Tracker."
+        )
+    # 5. Power & Energy Domain
     elif any(k in upper for k in ['POWER', 'ELECTRICITY', 'NERC', 'GRID', 'FUEL', 'PETROL', 'NNPC', 'ENERGY', 'GAS', 'SUBSIDY']):
         answer = (
             "Nigeria's energy crisis operates on a dual bottleneck: a fragile national electrical grid and high fuel costs following the removal of the petrol subsidy.\n\n"
@@ -340,16 +347,7 @@ def _get_fast_local_answer(query: str) -> Dict[str, Any]:
             "The enactment of the Electricity Act 2023 was a major constitutional milestone: it broke the federal monopoly and empowered State Governments to establish their own electricity regulatory commissions (like Lagos, Enugu, and Ondo) to generate and distribute power independently.\n\n"
             "What you can do: Track whether your state has established its State Electricity Regulatory Board to attract off-grid IPP solar and gas investments to your community."
         )
-    # Education & Schools Domain
-    elif any(k in upper for k in ['SCHOOL', 'EDUCATION', 'STUDENT', 'TEACHER', 'ASUU', 'UBEC', 'NELFUND', 'TETFUND']):
-        answer = (
-            "The state of public education in Nigeria today presents a sobering, multi-dimensional crisis across primary, secondary, and tertiary tiers.\n\n"
-            "At the foundational basic education level (primary and junior secondary), the single biggest bottleneck is the Universal Basic Education Commission (UBEC) matching grant crisis. Under the law, the Federal Government sets aside 2% of the Consolidated Revenue Fund for basic education, but state governments must provide a 50% matching counterpart fund to access it. Over ₦100 billion in matching grants remains untouched in Central Bank vaults because more than 20 state governors have failed to provide their counterpart funds. Meanwhile, millions of primary school pupils in rural communities sit on bare floors with leaking zinc roofs, zero textbooks, and un-equipped laboratories.\n\n"
-            "According to UNESCO and UNICEF figures, Nigeria still grapples with over 18 to 20 million out-of-school children — the highest concentration in Sub-Saharan Africa, heavily concentrated across the North-East and North-West geopolitical zones.\n\n"
-            "At the tertiary level, federal and state universities struggle with recurring funding deficits, dilapidated hostels, and brain drain ('Japa') among academic lecturers. The newly introduced Nigerian Education Loan Fund (NELFUND) represents an attempt to bridge tuition affordability, but systemic capital investment in research and modern laboratory equipment remains low compared to UNESCO's recommended 15-20% national budget benchmark (Nigeria averages around 5-8%).\n\n"
-            "What citizens can do: Check if your State Universal Basic Education Board (SUBEB) has accessed its annual UBEC matching grant allocation, and use our FOI Generator to demand public disclosure on school rehabilitation contract awards in your constituency."
-        )
-    # Healthcare Domain
+    # 6. Healthcare Domain
     elif any(k in upper for k in ['HEALTH', 'HOSPITAL', 'DOCTOR', 'DRUG', 'PHC', 'CLINIC', 'NURSE']):
         answer = (
             "Nigeria's public healthcare system faces severe structural strain, characterized by underfunded Primary Healthcare Centers (PHCs), massive brain drain of medical personnel, and high out-of-pocket medical expenditures.\n\n"
@@ -357,18 +355,8 @@ def _get_fast_local_answer(query: str) -> Dict[str, Any]:
             "Furthermore, the mass emigration of doctors and nurses to the UK, Canada, and the Middle East has reduced doctor-to-patient ratios to roughly 1 doctor per 5,000 citizens, far worse than the WHO recommended 1:600 standard.\n\n"
             "What you can do: Track whether your state government is remitting its counterpart contributions to the State Primary Health Care Board, and use the WSFU accountability hub to monitor health budget execution."
         )
-    # LGA Autonomy & Supreme Court Domain
-    elif any(k in upper for k in ['LGA', 'AUTONOMY', 'COUNCIL', 'LOCAL GOV', 'SUPREME COURT']):
-        answer = (
-            "Let's put this in plain terms: for more than twenty years, state governors across Nigeria basically held local government finances in a stranglehold through what was called the State Joint Local Government Account. Governors would collect all the money coming from Abuja, give local councils peanuts for basic salaries, and keep the rest under state control. On July 11, 2024, the Supreme Court finally pulled the plug on that system.\n\n"
-            "Here is how the game actually changed:\n\n"
-            "First, the apex court ruled that the Federation Account Allocation Committee (FAAC) and the Accountant-General must pay monthly council allocations — which currently sit around ₦250 million to ₦450 million per LGA — straight into each council's dedicated bank account. No governor can delay or deduct from it at state level anymore.\n\n"
-            "Second, the court banned governors from disbanding elected councils to install hand-picked caretaker committees. In fact, if a state refuses to hold local government elections and tries to run councils with stooges, the Federal Government is legally barred from releasing a single kobo to those councils until proper elections happen.\n\n"
-            "Why this matters for you and me: Your LGA Chairman can no longer give the old excuse that 'His Excellency hasn't released our funds' when primary health clinics have no basic malaria drugs, community boreholes pack up, or community roads are flooded. That money is landing directly in their accounts every single month.\n\n"
-            "What you should do right now: Find out who your ward councillor and council chairman are, request their monthly project roadmap, and demand to see how that ₦300M+ monthly cash is being spent right inside your neighborhood."
-        )
-    # FAAC & State Fiscal Ledgers
-    elif any(k in upper for k in ['FAAC', 'LAGOS', 'RIVERS', 'KANO', 'MONEY', 'ALLOCATION', 'REVENUE', 'DEBT']):
+    # 7. FAAC & State Fiscal Ledgers
+    elif any(k in upper for k in ['FAAC', 'LAGOS', 'RIVERS', 'KANO', 'ALLOCATION', 'REVENUE', 'DEBT', 'DERIVATION']):
         answer = (
             "To understand where public money in Nigeria actually goes, you have to look at the Federation Account Allocation Committee (FAAC) meeting that happens in Abuja every month. All the revenue from crude oil sales, corporate taxes collected by FIRS, import customs duties, and the VAT you pay whenever you buy goods get pooled into one giant federation vault.\n\n"
             "Under the constitutional revenue-sharing formula, the Federal Government takes the largest chunk at 52.68%, the 36 State Governments share 26.72%, and the 774 Local Government Councils share 20.60%. On top of that, oil-producing states like Rivers, Delta, and Akwa Ibom get an extra 13% derivation fund directly off mineral earnings before the rest is shared.\n\n"
@@ -377,7 +365,19 @@ def _get_fast_local_answer(query: str) -> Dict[str, Any]:
             "The real disparity is in per-capita spending power. For instance, Delta State receives about ₦58,000 per citizen annually from FAAC, while populous states like Kano average around ₦17,600 to ₦20,000 per resident. That means resource management and stopping leakages in non-oil states is a life-or-death matter for public schools and rural hospitals.\n\n"
             "What you can do: Track your state's net allocation on our WSFU FAAC Explorer and compare it against your state's published budget to see if capital infrastructure is truly getting funded."
         )
-    # FOI Act & Public Scrutiny
+    # 8. International Relations & Foreign Policy Domain
+    elif any(k in upper for k in ['INTERNATIONAL', 'FOREIGN POLICY', 'FOREIGN RELATION', 'DIPLOMACY', 'ECOWAS', 'AFRICAN UNION', 'SAHEL', 'NIGER REPUBLIC', 'DIASPORA', 'NIDCOM', 'EMBASSY', 'PASSPORT', 'VISA', 'BRICS', 'BILATERAL']):
+        answer = (
+            "Nigeria's foreign policy and international relations have historically been guided by an 'Afrocentric' doctrine — placing Africa at the center of national security, diplomacy, and trade. However, in today's shifting global order, Nigeria's international engagement is navigating high-stakes geopolitical tests across West Africa and the wider world.\n\n"
+            "At the regional level within ECOWAS (the Economic Community of West African States), Nigeria has long served as the economic and military anchor, previously leading ECOMOG peacekeeping interventions in Liberia and Sierra Leone. Following military coups in neighboring Niger, Mali, and Burkina Faso, relations became strained under ECOWAS sanctions, leading those three countries to form the Alliance of Sahel States (AES) and threaten withdrawal from ECOWAS. Nigeria's diplomatic priority has since shifted toward constructive engagement to prevent regional disintegration and preserve border trade.\n\n"
+            "On continental trade, Nigeria is a key signatory to the African Continental Free Trade Area (AfCFTA), which creates a single market of 1.3 billion people. Maximizing AfCFTA benefits requires fixing port congestion, resolving non-tariff barriers, and expanding domestic manufacturing beyond crude oil exports.\n\n"
+            "On the global stage, Nigeria maintains non-aligned strategic partnerships:\n"
+            "• With China: Heavy infrastructure financing (railways, deep seaports like Lekki Port, and airport terminals) alongside bilateral currency swap agreements.\n"
+            "• With the US, UK, and European Union: Crucial defense cooperation, intelligence sharing against maritime piracy in the Gulf of Guinea, and foreign direct investment.\n"
+            "• In Multilateral Forums: Active membership in the United Nations, African Union, Commonwealth, and growing engagement with the BRICS alliance as a partner country to expand non-dollar trade settlement.\n\n"
+            "Diaspora Dynamics: Over 15 million Nigerians in the diaspora remit over $20 billion annually through the Central Bank's remittance corridors, exceeding official foreign direct investment. Through the Nigerians in Diaspora Commission (NiDCOM), citizens abroad continue to advocate for diaspora voting rights, passport consular improvements, and investment protection."
+        )
+    # 9. FOI Act & Public Scrutiny
     elif any(k in upper for k in ['FOI', 'REQUEST', 'RIGHT', 'LAW', 'ACT']):
         answer = (
             "If you want to hold any public office in Nigeria accountable, the Freedom of Information (FOI) Act 2011 is arguably the sharpest tool in your arsenal. The law is very clear: public records belong to the citizens, not to the private drawers of government officials.\n\n"
@@ -391,6 +391,7 @@ def _get_fast_local_answer(query: str) -> Dict[str, Any]:
             "Under Section 14(2)(a) of the 1999 Constitution (as amended), sovereignty belongs to the citizens from whom government derives all its authority. Whether examining federal budget allocations, legislative oversight by the National Assembly, subnational execution across the 36 states, or bilateral international treaties, verified public records provide the ultimate benchmark of performance.\n\n"
             "Feel free to ask for specific state-level data, comparative fiscal ledgers, legal citations, or foreign policy analysis on this topic, and we will unpack the numbers and official documentation together."
         )
+
 
     return {
         "answer": answer,
