@@ -6,6 +6,7 @@ Encyclopedic knowledge on Nigerian governance, citizen welfare, macroeconomic po
 and global foreign relations (ECOWAS, African Union, AfCFTA, UN, bilateral diplomacy, diaspora affairs).
 """
 
+import os
 import json
 import asyncio
 import logging
@@ -20,9 +21,10 @@ logger = logging.getLogger("wsfu.ai_intelligence")
 
 def _get_groq_client():
     """Returns initialized Groq client if key is configured."""
-    if settings.GROQ_API_KEY:
+    key = (settings.GROQ_API_KEY or os.environ.get("GROQ_API_KEY", "")).strip()
+    if key:
         try:
-            return Groq(api_key=settings.GROQ_API_KEY)
+            return Groq(api_key=key)
         except Exception as e:
             logger.error(f"Failed to initialize Groq client: {e}")
     return None
@@ -30,12 +32,14 @@ def _get_groq_client():
 
 def _get_genai_client():
     """Returns initialized GenAI client if key is configured."""
-    if settings.GEMINI_API_KEY:
+    key = (settings.GEMINI_API_KEY or os.environ.get("GEMINI_API_KEY", "")).strip()
+    if key:
         try:
-            return genai.Client(api_key=settings.GEMINI_API_KEY)
+            return genai.Client(api_key=key)
         except Exception as e:
             logger.error(f"Failed to initialize GenAI client: {e}")
     return None
+
 
 
 def _sync_generate_text_groq(system_instruction: str, user_prompt: str, chat_history: Optional[List[Dict[str, str]]] = None) -> Optional[str]:
