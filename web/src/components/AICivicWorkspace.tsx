@@ -1,176 +1,399 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Sparkles,
   Send,
   RefreshCw,
-  Scale,
-  Building,
-  Landmark,
-  FileText
+  Plus,
+  Trash2,
+  Clock,
+  MessageSquare,
+  Copy,
+  Check
 } from 'lucide-react';
-
 
 import { callAIAsk } from '../lib/api';
 
+interface ChatMessage {
+  id: string;
+  sender: 'user' | 'ai';
+  text: string;
+  timestamp: string;
+  sources?: string[];
+}
+
+interface ChatSession {
+  id: string;
+  title: string;
+  createdAt: string;
+  updatedAt: string;
+  messages: ChatMessage[];
+}
+
+const STORAGE_KEY = 'wsfu_ai_chat_sessions_v1';
+
+const DEFAULT_WELCOME_MESSAGE: ChatMessage = {
+  id: 'msg-welcome',
+  sender: 'ai',
+  text: (
+    "👋 **Hello! I'm your WSFU Civic Intelligence Partner.**\n\n" +
+    "Think of me as your personal, non-partisan governance analyst and investigative friend on the ground. I'm here to help you unpack what's really happening in Nigeria's public sector:\n\n" +
+    "• **Track State & LGA FAAC Allocations:** Where the money went, debt deductions, and per-capita spending power.\n" +
+    "• **Audit Political Manifesto Promises:** Real-world delivery tracking for the President and Governors.\n" +
+    "• **Demystify Nigerian Laws:** The Supreme Court LGA financial autonomy ruling, FOI Act 2011, Tax Reforms, and PIA in plain terms.\n" +
+    "• **Draft Statutory Legal Notices:** Polished Section 1 FOI requests for official public records.\n\n" +
+    "_Feel free to ask in English or vibrantly in Nigerian Pidgin! What would you like to investigate today?_"
+  ),
+  timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+  sources: ["National Bureau of Statistics", "FAAC Technical Committee", "Supreme Court Records", "FOI Act 2011"]
+};
+
 export const AICivicWorkspace: React.FC = () => {
-  const [messages, setMessages] = useState<Array<{ sender: 'user' | 'ai'; text: string; sources?: string[] }>>([
-    {
-      sender: 'ai',
-      text: (
-        "🇳🇬 **Welcome to the WSFU AI Civic Intelligence Brain (Gemini 3.7 Flash)**\n\n" +
-        "I am your forensic public governance advisor and constitutional research assistant. You can ask me to:\n\n" +
-        "• **Analyze State & LGA FAAC Allocations:** Trace statutory disbursements, debt deductions, and per-capita spending.\n" +
-        "• **Cross-Examine Political Promises:** Audit delivery milestones for the President, State Governors, and Senators.\n" +
-        "• **Demystify Nigerian Laws:** Plain-language explanations of the Supreme Court LGA autonomy ruling, FOI Act 2011, or Petroleum Industry Act.\n" +
-        "• **Draft Statutory Legal Notices:** Format FOI applications citing official sections.\n\n" +
-        "_You can ask in English, Nigerian Pidgin, Yoruba, Hausa, or Igbo._"
-      ),
-      sources: ["National Bureau of Statistics (NBS)", "Supreme Court of Nigeria", "FAAC Technical Committee", "FOI Act 2011"]
+  const [sessions, setSessions] = useState<ChatSession[]>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch (e) {
+      console.error('Failed to load chat sessions', e);
     }
-  ]);
+    const initialSession: ChatSession = {
+      id: 'session-' + Date.now(),
+      title: 'New Governance Inquiry',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      messages: [DEFAULT_WELCOME_MESSAGE]
+    };
+    return [initialSession];
+  });
+
+  const [activeSessionId, setActiveSessionId] = useState<string>(() => sessions[0]?.id || 'default');
   const [inputQuery, setInputQuery] = useState('');
   const [loading, setLoading] = useState(false);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Active Session
+  const activeSession = sessions.find(s => s.id === activeSessionId) || sessions[0];
+
+  // Save to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(sessions));
+    } catch (e) {
+      console.error('Failed to persist chat sessions', e);
+    }
+  }, [sessions]);
+
+  // Scroll to bottom on new messages
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [activeSession?.messages, loading]);
+
+  const handleNewChat = () => {
+    const newSession: ChatSession = {
+      id: 'session-' + Date.now(),
+      title: 'New Governance Inquiry',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      messages: [DEFAULT_WELCOME_MESSAGE]
+    };
+    setSessions(prev => [newSession, ...prev]);
+    setActiveSessionId(newSession.id);
+  };
+
+  const handleDeleteSession = (sessionId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const updated = sessions.filter(s => s.id !== sessionId);
+    if (updated.length === 0) {
+      const fresh: ChatSession = {
+        id: 'session-' + Date.now(),
+        title: 'New Governance Inquiry',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        messages: [DEFAULT_WELCOME_MESSAGE]
+      };
+      setSessions([fresh]);
+      setActiveSessionId(fresh.id);
+    } else {
+      setSessions(updated);
+      if (activeSessionId === sessionId) {
+        setActiveSessionId(updated[0].id);
+      }
+    }
+  };
+
+  const handleCopy = async (text: string, msgId: string) => {
+    if (navigator.clipboard) {
+      await navigator.clipboard.writeText(text);
+      setCopiedId(msgId);
+      setTimeout(() => setCopiedId(null), 2000);
+    }
+  };
 
   const handleSend = async (queryText?: string) => {
     const q = queryText || inputQuery;
     if (!q.trim()) return;
 
-    setMessages(prev => [...prev, { sender: 'user', text: q.trim() }]);
+    const userMsg: ChatMessage = {
+      id: 'msg-' + Date.now(),
+      sender: 'user',
+      text: q.trim(),
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    };
+
+    // Auto-update session title if it's the first citizen prompt
+    const isFirstUserMsg = activeSession.messages.filter(m => m.sender === 'user').length === 0;
+    const newTitle = isFirstUserMsg
+      ? q.trim().length > 30 ? q.trim().slice(0, 30) + '...' : q.trim()
+      : activeSession.title;
+
+    const updatedMessages = [...activeSession.messages, userMsg];
+
+    setSessions(prev =>
+      prev.map(s =>
+        s.id === activeSessionId
+          ? { ...s, title: newTitle, updatedAt: new Date().toISOString(), messages: updatedMessages }
+          : s
+      )
+    );
+
     setInputQuery('');
     setLoading(true);
 
     try {
-      const data = await callAIAsk(q.trim());
-      setMessages(prev => [
-        ...prev,
-        {
-          sender: 'ai',
-          text: data.answer,
-          sources: data.sources || ["National Bureau of Statistics", "Supreme Court Records"]
-        }
-      ]);
+      // Pass previous turns for multi-turn conversational memory
+      const historyContext = activeSession.messages.map(m => ({
+        sender: m.sender,
+        text: m.text
+      }));
+
+      const data = await callAIAsk(q.trim(), historyContext);
+
+      const aiMsg: ChatMessage = {
+        id: 'msg-' + (Date.now() + 1),
+        sender: 'ai',
+        text: data.answer,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        sources: data.sources || ["Official Gazettes", "WSFU Intelligence"]
+      };
+
+      setSessions(prev =>
+        prev.map(s =>
+          s.id === activeSessionId
+            ? { ...s, updatedAt: new Date().toISOString(), messages: [...s.messages, aiMsg] }
+            : s
+        )
+      );
     } catch {
-      // Fallback
+      // Fallback message
     } finally {
       setLoading(false);
     }
   };
 
-
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
-      {/* Workspace Header */}
-      <div className="bg-gradient-to-r from-emerald-950 via-zinc-900 to-zinc-950 border border-emerald-800/40 rounded-2xl p-6 shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+    <div className="max-w-6xl mx-auto space-y-4">
+      {/* Workspace Header Strip */}
+      <div className="bg-gradient-to-r from-emerald-950 via-zinc-900 to-zinc-950 border border-emerald-800/40 rounded-2xl p-5 shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="space-y-1">
           <div className="flex items-center space-x-2 text-emerald-400 font-bold text-xs uppercase tracking-wider">
             <Sparkles className="w-4 h-4 animate-pulse" />
-            <span>AI CIVIC INTELLIGENCE SUITE</span>
+            <span>AI CIVIC INTELLIGENCE PARTNER</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
-            Ask WSFU AI Assistant
+          <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+            Conversational Governance Brain
           </h1>
-          <p className="text-xs sm:text-sm text-zinc-400 max-w-2xl leading-relaxed">
-            RAG-grounded public governance advisor powered by <strong>Google Gemini 3.7 Flash</strong>. Ask forensic questions on budgets, FAAC revenues, government promises, and legal statutes.
+          <p className="text-xs text-zinc-400 max-w-xl">
+            Multi-turn conversation memory with natural human reasoning. Powered by <strong>Google Gemini 3.7 Flash</strong>.
           </p>
         </div>
 
-        <div className="flex items-center space-x-2 bg-zinc-950/80 px-4 py-2.5 rounded-xl border border-zinc-800 text-xs font-mono text-emerald-400 flex-shrink-0">
-          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-          <span>Model: Gemini 3.7 Flash</span>
-        </div>
-      </div>
-
-      {/* Quick Prompt Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
-        {[
-          { icon: Landmark, title: 'FAAC Fiscal Audit', prompt: 'Explain how FAAC revenues and debt deductions are calculated for Lagos, Rivers, and Kano.' },
-          { icon: Scale, title: 'Supreme Court LGA Ruling', prompt: 'Explain the landmark Supreme Court LGA direct funding autonomy ruling in simple Pidgin.' },
-          { icon: Building, title: 'Promise Delivery Audit', prompt: 'Compare Governor Alex Otti vs Governor Sanwo-Olu infrastructure and road delivery.' },
-          { icon: FileText, title: 'Statutory FOI Guidance', prompt: 'What are the penalties under Section 7 when a Ministry defaults on a 7-day FOI request?' }
-        ].map((item, idx) => (
+        <div className="flex items-center space-x-2">
           <button
-            key={idx}
-            onClick={() => handleSend(item.prompt)}
-            className="p-3.5 bg-zinc-900/80 hover:bg-zinc-850 border border-zinc-800 hover:border-emerald-800/60 rounded-xl text-left transition-all cursor-pointer group shadow-sm flex flex-col justify-between space-y-2"
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            className="md:hidden flex items-center space-x-1 px-3 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-bold text-xs rounded-xl transition-all cursor-pointer"
           >
-            <div className="p-2 w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center group-hover:scale-110 transition-transform">
-              <item.icon className="w-4 h-4" />
-            </div>
-            <div>
-              <h4 className="font-bold text-xs text-white group-hover:text-emerald-300 transition-colors">{item.title}</h4>
-              <p className="text-[10px] text-zinc-500 line-clamp-2 mt-0.5">{item.prompt}</p>
-            </div>
+            <Clock className="w-3.5 h-3.5 text-emerald-400" />
+            <span>History</span>
           </button>
-        ))}
+
+          <button
+            onClick={handleNewChat}
+            className="flex items-center space-x-1.5 px-3.5 py-2 bg-emerald-500 hover:bg-emerald-400 text-black font-extrabold text-xs uppercase tracking-wider rounded-xl transition-all cursor-pointer shadow-lg shadow-emerald-500/20"
+          >
+            <Plus className="w-4 h-4" />
+            <span>New Chat</span>
+          </button>
+        </div>
       </div>
 
-      {/* Main Conversation Container */}
-      <div className="bg-zinc-900 border border-zinc-800 rounded-2xl shadow-xl overflow-hidden flex flex-col h-[560px]">
-        {/* Messages Feed */}
-        <div className="flex-1 overflow-y-auto p-5 space-y-4">
-          {messages.map((m, idx) => (
-            <div
-              key={idx}
-              className={`flex flex-col ${m.sender === 'user' ? 'items-end' : 'items-start'}`}
-            >
-              <div
-                className={`max-w-[88%] rounded-2xl p-4 text-xs sm:text-sm leading-relaxed shadow-lg ${
-                  m.sender === 'user'
-                    ? 'bg-emerald-600 text-white rounded-br-none'
-                    : 'bg-zinc-950 text-zinc-200 rounded-bl-none border border-zinc-800'
-                }`}
-              >
-                <p className="whitespace-pre-line font-sans">{m.text}</p>
 
-                {m.sources && m.sources.length > 0 && (
-                  <div className="mt-3 pt-2.5 border-t border-zinc-800/80 flex flex-wrap items-center gap-1.5 text-[10px] text-zinc-400">
-                    <span className="font-mono text-zinc-500 font-bold uppercase">Sources:</span>
-                    {m.sources.map((s, sIdx) => (
-                      <span
-                        key={sIdx}
-                        className="px-2 py-0.5 bg-zinc-900 border border-zinc-800 rounded-md text-emerald-400 font-medium"
-                      >
-                        {s}
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-          ))}
-
-          {loading && (
-            <div className="flex items-center space-x-2 bg-zinc-950 text-zinc-400 p-3.5 rounded-2xl border border-zinc-800 w-52 animate-pulse text-xs">
-              <RefreshCw className="w-4 h-4 text-emerald-400 animate-spin" />
-              <span>Analyzing official records...</span>
-            </div>
-          )}
-        </div>
-
-        {/* Input Bar */}
-        <form
-          onSubmit={e => {
-            e.preventDefault();
-            handleSend();
-          }}
-          className="bg-zinc-950 p-3.5 border-t border-zinc-800 flex items-center space-x-2 flex-shrink-0"
+      {/* Main Workspace with Chat History Sidebar + Conversation Thread */}
+      <div className="bg-zinc-900 border border-zinc-800 rounded-2xl shadow-xl overflow-hidden flex flex-col md:flex-row h-[620px]">
+        {/* Chat History Sidebar */}
+        <div
+          className={`${
+            sidebarOpen ? 'w-full md:w-64' : 'hidden md:block md:w-0'
+          } bg-zinc-950 border-r border-zinc-800 transition-all duration-300 flex flex-col flex-shrink-0`}
         >
-          <input
-            type="text"
-            value={inputQuery}
-            onChange={e => setInputQuery(e.target.value)}
-            placeholder="Ask anything about Nigerian budgets, FAAC, politicians, laws, or FOI requests..."
-            className="flex-1 bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3 text-xs sm:text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500"
-          />
-          <button
-            type="submit"
-            disabled={loading || !inputQuery.trim()}
-            className="px-5 py-3 bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 text-black font-extrabold text-xs uppercase tracking-wider rounded-xl transition-all cursor-pointer shadow-lg shadow-emerald-500/20 flex items-center space-x-1.5"
+          {/* Sidebar Header */}
+          <div className="p-3.5 border-b border-zinc-800/80 flex items-center justify-between">
+            <span className="text-xs font-mono uppercase font-bold text-zinc-400 flex items-center gap-1.5">
+              <Clock className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Chat History</span>
+            </span>
+            <button
+              onClick={handleNewChat}
+              title="Start New Chat"
+              className="p-1 text-zinc-400 hover:text-emerald-400 hover:bg-zinc-900 rounded transition-colors cursor-pointer"
+            >
+              <Plus className="w-4 h-4" />
+            </button>
+          </div>
+
+          {/* Session List */}
+          <div className="flex-1 overflow-y-auto p-2 space-y-1">
+            {sessions.map(s => {
+              const isActive = s.id === activeSessionId;
+              return (
+                <div
+                  key={s.id}
+                  onClick={() => setActiveSessionId(s.id)}
+                  className={`group flex items-center justify-between p-2.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                    isActive
+                      ? 'bg-emerald-950/60 text-emerald-300 border border-emerald-800/50'
+                      : 'text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200'
+                  }`}
+                >
+                  <div className="flex items-center space-x-2 overflow-hidden pr-2">
+                    <MessageSquare className={`w-3.5 h-3.5 flex-shrink-0 ${isActive ? 'text-emerald-400' : 'text-zinc-500'}`} />
+                    <span className="truncate">{s.title}</span>
+                  </div>
+
+                  <button
+                    onClick={(e) => handleDeleteSession(s.id, e)}
+                    title="Delete Chat"
+                    className="opacity-0 group-hover:opacity-100 p-1 text-zinc-500 hover:text-rose-400 transition-opacity cursor-pointer"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Conversation Area */}
+        <div className="flex-1 flex flex-col h-full bg-zinc-900 overflow-hidden">
+          {/* Conversation Messages Feed */}
+          <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4">
+            {activeSession.messages.map((m) => {
+              const isUser = m.sender === 'user';
+              return (
+                <div
+                  key={m.id}
+                  className={`flex flex-col ${isUser ? 'items-end' : 'items-start'} animate-fadeIn`}
+                >
+                  <div
+                    className={`max-w-[90%] sm:max-w-[85%] rounded-2xl p-4 text-xs sm:text-sm leading-relaxed shadow-lg relative group ${
+                      isUser
+                        ? 'bg-emerald-600 text-white rounded-br-none'
+                        : 'bg-zinc-950 text-zinc-200 rounded-bl-none border border-zinc-800'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-1.5 opacity-60 text-[10px] font-mono">
+                      <span>{isUser ? 'Citizen (You)' : 'WSFU AI Partner'}</span>
+                      <span>{m.timestamp}</span>
+                    </div>
+
+                    <div className="whitespace-pre-line font-sans leading-relaxed">
+                      {m.text}
+                    </div>
+
+                    {m.sources && m.sources.length > 0 && (
+                      <div className="mt-3 pt-2.5 border-t border-zinc-800/80 flex flex-wrap items-center gap-1.5 text-[10px] text-zinc-400">
+                        <span className="font-mono text-zinc-500 font-bold uppercase">Sources:</span>
+                        {m.sources.map((src, sIdx) => (
+                          <span
+                            key={sIdx}
+                            className="px-2 py-0.5 bg-zinc-900 border border-zinc-800 rounded-md text-emerald-400 font-medium"
+                          >
+                            {src}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Copy Button */}
+                    <button
+                      onClick={() => handleCopy(m.text, m.id)}
+                      title="Copy response"
+                      className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 p-1 bg-zinc-900/90 text-zinc-400 hover:text-white rounded border border-zinc-700 transition-all cursor-pointer text-xs"
+                    >
+                      {copiedId === m.id ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+
+            {loading && (
+              <div className="flex items-center space-x-2 bg-zinc-950 text-zinc-300 p-3 rounded-2xl border border-zinc-800 w-52 animate-pulse text-xs">
+                <RefreshCw className="w-4 h-4 text-emerald-400 animate-spin" />
+                <span>Thinking & analyzing context...</span>
+              </div>
+            )}
+
+            <div ref={messagesEndRef} />
+          </div>
+
+          {/* Quick Prompt Ideas */}
+          <div className="px-4 py-2 bg-zinc-950/70 border-t border-zinc-800/80 flex items-center space-x-2 overflow-x-auto text-xs font-semibold flex-shrink-0">
+            <span className="text-[11px] text-zinc-500 font-mono uppercase pr-1">Try:</span>
+            {[
+              'Compare Lagos vs Rivers FAAC allocation',
+              'Explain the Supreme Court LGA direct funding ruling in Pidgin',
+              'How to write an FOI letter to Ministry of Works?',
+              'Audit Governor Alex Otti road promises'
+            ].map((prompt, pIdx) => (
+              <button
+                key={pIdx}
+                onClick={() => handleSend(prompt)}
+                className="px-2.5 py-1 bg-zinc-900 hover:bg-emerald-950 hover:text-emerald-300 text-zinc-300 border border-zinc-800 rounded-lg whitespace-nowrap transition-colors cursor-pointer text-xs"
+              >
+                {prompt}
+              </button>
+            ))}
+          </div>
+
+          {/* Input Form */}
+          <form
+            onSubmit={e => {
+              e.preventDefault();
+              handleSend();
+            }}
+            className="bg-zinc-950 p-3.5 border-t border-zinc-800 flex items-center space-x-2 flex-shrink-0"
           >
-            <Send className="w-4 h-4" />
-            <span>Ask AI</span>
-          </button>
-        </form>
+            <input
+              type="text"
+              value={inputQuery}
+              onChange={e => setInputQuery(e.target.value)}
+              placeholder="Ask anything about Nigerian budgets, governors, laws, or ask follow-up questions..."
+              className="flex-1 bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3 text-xs sm:text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500 transition-colors"
+            />
+            <button
+              type="submit"
+              disabled={loading || !inputQuery.trim()}
+              className="px-5 py-3 bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 text-black font-extrabold text-xs uppercase tracking-wider rounded-xl transition-all cursor-pointer shadow-lg shadow-emerald-500/20 flex items-center space-x-1.5 flex-shrink-0"
+            >
+              <Send className="w-4 h-4" />
+              <span>Send</span>
+            </button>
+          </form>
+        </div>
       </div>
     </div>
   );

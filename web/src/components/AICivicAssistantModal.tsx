@@ -40,7 +40,8 @@ export const AICivicAssistantModal: React.FC<AICivicAssistantModalProps> = ({ is
     setLoading(true);
 
     try {
-      const data = await callAIAsk(q.trim());
+      const historyContext = messages.map(m => ({ sender: m.sender, text: m.text }));
+      const data = await callAIAsk(q.trim(), historyContext);
       setMessages(prev => [
         ...prev,
         {
@@ -55,6 +56,7 @@ export const AICivicAssistantModal: React.FC<AICivicAssistantModalProps> = ({ is
       setLoading(false);
     }
   };
+
 
   return (
 

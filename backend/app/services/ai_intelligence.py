@@ -56,28 +56,38 @@ def _sync_generate_json(prompt: str, model_name: str) -> Optional[str]:
 
 async def ask_civic_assistant(query: str, chat_history: Optional[List[Dict[str, str]]] = None) -> Dict[str, Any]:
     """
-    High-speed RAG-grounded civic assistant for governance, FAAC revenue, political promises, and laws.
+    High-speed, human-sounding RAG-grounded civic assistant with multi-turn memory.
     """
     if not settings.GEMINI_API_KEY:
         return _get_fast_local_answer(query)
 
     system_instruction = (
-        "You are the WSFU AI Civic Intelligence Engine, a non-partisan, forensic Nigerian governance advisor.\n"
-        "RULES:\n"
-        "1. Keep answers concise, factual, and direct (under 150 words).\n"
-        "2. Ground in Nigerian laws (1999 Constitution, FOI Act 2011, Supreme Court LGA ruling) and FAAC fiscal records.\n"
-        "3. If queried in Nigerian Pidgin, reply fluently in Pidgin.\n"
-        "4. Use bullet points and cite 2 authoritative sources (NBS, FAAC, Supreme Court) at the bottom."
+        "You are the WSFU (Who Swear For Us) AI Civic Intelligence Partner — an authentic, brilliant, non-partisan, "
+        "and street-smart Nigerian civic analyst, investigative journalist, and trusted accountability advisor.\n\n"
+        "TONE & PERSONALITY:\n"
+        "• Sound like an engaging, sharp, and empathetic human who understands real Nigerian realities, inflation, public infrastructure, and politics.\n"
+        "• Be conversational, direct, and thoughtful — never sound like a robotic FAQ.\n"
+        "• If the citizen speaks or asks in Nigerian Pidgin, reply fluently and naturally in vibrant Nigerian Pidgin.\n"
+        "• If the citizen asks a follow-up question, connect it naturally to what you were previously discussing.\n"
+        "• Use crisp formatting: bold highlights, clear bullet points, and practical takeaways.\n"
+        "• Always end with 2 verified authorities/sources (e.g. NBS, FAAC Technical Committee, Supreme Court, FOI Act 2011)."
     )
 
-    prompt = f"{system_instruction}\n\nUser Question: {query}"
+    # Multi-turn conversational memory injection
+    history_context = ""
+    if chat_history and len(chat_history) > 0:
+        history_context = "\n\n[CONVERSATION HISTORY]\n"
+        for item in chat_history[-6:]:
+            speaker = "Citizen" if item.get("sender") == "user" or item.get("role") == "user" else "WSFU AI"
+            history_context += f"{speaker}: {item.get('text', '')}\n"
+        history_context += "[CURRENT QUERY]\n"
+
+    prompt = f"{system_instruction}{history_context}Citizen: {query}\n\nWSFU AI:"
     
-    # Low-latency model list (ultra-fast Gemini Flash)
     primary_model = settings.GEMINI_MODEL or "gemini-2.5-flash"
     fallback_model = "gemini-1.5-flash"
 
     try:
-        # Strict 4-second timeout to guarantee fast UX
         text = await asyncio.wait_for(
             asyncio.to_thread(_sync_generate_text, prompt, primary_model),
             timeout=4.0
@@ -99,6 +109,7 @@ async def ask_civic_assistant(query: str, chat_history: Optional[List[Dict[str, 
         logger.debug(f"Live AI call exceeded timeout or error ({e}), delivering fast local grounded response.")
 
     return _get_fast_local_answer(query)
+
 
 
 def _get_fast_local_answer(query: str) -> Dict[str, Any]:

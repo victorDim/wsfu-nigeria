@@ -512,7 +512,10 @@ export async function submitArticleCorrection(
   }
 }
 
-export async function callAIAsk(query: string): Promise<any> {
+export async function callAIAsk(
+  query: string,
+  chat_history?: Array<{ sender: string; text: string }>
+): Promise<any> {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 4500);
 
@@ -520,7 +523,7 @@ export async function callAIAsk(query: string): Promise<any> {
     const res = await fetch(`${API_BASE}/ai/ask`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ query }),
+      body: JSON.stringify({ query, chat_history }),
       signal: controller.signal
     });
     clearTimeout(timeoutId);
@@ -528,6 +531,7 @@ export async function callAIAsk(query: string): Promise<any> {
   } catch {
     clearTimeout(timeoutId);
   }
+
 
   // Instant local response
   const upper = query.toUpperCase();
