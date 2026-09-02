@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Article } from '../types';
 import { ExternalLink, Share2, Sparkles, CheckCircle2, AlertCircle, Flame, Newspaper, Shield, Landmark, MessageSquare, Copy, Check } from 'lucide-react';
+import { AICrossExaminerModal } from './AICrossExaminerModal';
 
 interface NewsCardProps {
   article: Article;
@@ -10,6 +11,8 @@ export const NewsCard: React.FC<NewsCardProps> = ({ article }) => {
   const summary = article.article_summaries;
   const [copied, setCopied] = useState(false);
   const [imgError, setImgError] = useState(false);
+  const [isAuditOpen, setIsAuditOpen] = useState(false);
+
 
   const getFormattedShareText = () => {
     let text = `🇳🇬 *WSFU CITIZEN ACCOUNTABILITY BRIEF*\n\n`;
@@ -235,6 +238,14 @@ export const NewsCard: React.FC<NewsCardProps> = ({ article }) => {
           </div>
 
           <div className="flex items-center space-x-2">
+            <button
+              onClick={() => setIsAuditOpen(true)}
+              title="AI Cross-Examine & Fact-Check Claims"
+              className="flex items-center space-x-1 px-2.5 py-1.5 bg-gradient-to-r from-emerald-950 to-zinc-900 hover:from-emerald-900 hover:to-zinc-850 text-emerald-400 border border-emerald-800/60 rounded-lg transition-all font-bold text-xs cursor-pointer shadow-sm"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>AI Fact-Check</span>
+            </button>
 
             <button
               onClick={handleWhatsAppShare}
@@ -264,7 +275,15 @@ export const NewsCard: React.FC<NewsCardProps> = ({ article }) => {
           </div>
         </div>
       </div>
+
+      {/* AI Cross-Examination & Fact-Check Modal */}
+      <AICrossExaminerModal
+        article={article}
+        isOpen={isAuditOpen}
+        onClose={() => setIsAuditOpen(false)}
+      />
     </article>
   );
+
 };
 

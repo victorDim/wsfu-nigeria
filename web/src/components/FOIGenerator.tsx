@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FileText, Send, Clock, Copy, Check, Printer, AlertCircle } from 'lucide-react';
+import { FileText, Send, Clock, Copy, Check, Printer, AlertCircle, Sparkles, RefreshCw } from 'lucide-react';
 import { submitFOIRequest } from '../lib/api';
 import { FOIRequest } from '../types';
 
@@ -13,8 +13,35 @@ export const FOIGenerator: React.FC = () => {
   const [citizenName, setCitizenName] = useState('');
   const [citizenContact, setCitizenContact] = useState('');
   const [loading, setLoading] = useState(false);
+  const [polishingAI, setPolishingAI] = useState(false);
   const [submittedRequest, setSubmittedRequest] = useState<FOIRequest | null>(null);
   const [copied, setCopied] = useState(false);
+
+  const handleAIPolish = async () => {
+    if (!details.trim()) return;
+    setPolishingAI(true);
+    try {
+      const res = await fetch('/api/v1/ai/polish-foi', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          mda_name: mdaName || 'Federal Ministry / Public Institution',
+          subject: subject || 'Request for Public Records',
+          raw_notes: details
+        })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.formal_subject && !subject) setSubject(data.formal_subject);
+        if (data.polished_details) setDetails(data.polished_details);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setPolishingAI(false);
+    }
+  };
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -263,18 +290,30 @@ ${citizenName || 'Applicant'}
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-zinc-300 mb-1.5 uppercase tracking-wider">
-              Detailed Information Description & Specific Documents *
-            </label>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="block text-xs font-bold text-zinc-300 uppercase tracking-wider">
+                Detailed Information Description & Specific Documents *
+              </label>
+              <button
+                type="button"
+                onClick={handleAIPolish}
+                disabled={polishingAI || !details.trim()}
+                className="flex items-center space-x-1 px-2.5 py-1 bg-gradient-to-r from-emerald-950 to-zinc-900 hover:from-emerald-900 hover:to-zinc-800 text-emerald-400 border border-emerald-800/60 rounded-lg text-xs font-bold transition-all cursor-pointer disabled:opacity-50"
+              >
+                {polishingAI ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
+                <span>{polishingAI ? 'AI Polishing...' : '✨ AI Polish & Cite Sections'}</span>
+              </button>
+            </div>
             <textarea
               required
               rows={5}
               value={details}
               onChange={(e) => setDetails(e.target.value)}
-              placeholder="Specify the exact contract sums, project locations, payment dates, or official records you are requesting pursuant to Section 1 of the Freedom of Information Act 2011..."
+              placeholder="Specify the exact contract sums, project locations, payment dates, or official records you are requesting pursuant to Section 1 of the Freedom of Information Act 2011 (or type rough notes and click ✨ AI Polish)..."
               className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500 text-xs"
             />
           </div>
+
 
           <div className="p-3 bg-zinc-950 border border-zinc-800 rounded-xl flex items-start space-x-2 text-xs text-zinc-400">
             <AlertCircle className="w-4 h-4 text-emerald-400 flex-shrink-0 mt-0.5" />
