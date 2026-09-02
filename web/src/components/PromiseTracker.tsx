@@ -23,8 +23,12 @@ import {
   Activity,
   BookOpen,
   ShieldAlert,
-  ExternalLink
+  ExternalLink,
+  Camera,
+  MessageSquare
 } from 'lucide-react';
+import { PromiseEvidenceModal } from './PromiseEvidenceModal';
+
 
 export const PromiseTracker: React.FC = () => {
   const [selectedStateCode, setSelectedStateCode] = useState<string>('AB'); // Default to Abia State
@@ -35,6 +39,14 @@ export const PromiseTracker: React.FC = () => {
   const [userVoted, setUserVoted] = useState<Record<string, number>>({});
   const [ratingMessage, setRatingMessage] = useState<string | null>(null);
   const [imageError, setImageError] = useState<Record<string, boolean>>({});
+  const [selectedPromiseForEvidence, setSelectedPromiseForEvidence] = useState<TrackedPromise | null>(null);
+  const [communityEvidenceFeed, setCommunityEvidenceFeed] = useState<Record<string, Array<{
+    location: string;
+    statusObservation: string;
+    description: string;
+    timestamp: string;
+  }>>>({});
+
 
   // Synchronous initial load with async live refresh
   const handleStateChange = async (stateCode: string) => {
@@ -700,26 +712,48 @@ export const PromiseTracker: React.FC = () => {
                 <p className="text-xs sm:text-sm text-zinc-300 mt-1 leading-relaxed">{p.description}</p>
               </div>
 
-              {/* Progress Bar & Milestones */}
+              {/* Interactive Milestone Stepper Timeline */}
               <div className="bg-zinc-950 p-4 rounded-xl border border-zinc-800/80 space-y-3">
                 <div className="flex items-center justify-between text-xs font-bold">
-                  <span className="text-zinc-400 uppercase tracking-wider">Execution Delivery Status:</span>
+                  <span className="text-zinc-400 uppercase tracking-wider">Milestone Execution Delivery:</span>
                   <span className={p.progress_pct === 100 ? 'text-emerald-400 font-black' : 'text-amber-400 font-black'}>
                     {p.progress_pct}% Completed
                   </span>
                 </div>
 
-                {/* Progress Bar Container */}
-                <div className="w-full bg-zinc-900 rounded-full h-2.5 overflow-hidden border border-zinc-800">
-                  <div
-                    className={`h-full rounded-full transition-all duration-500 ${
-                      p.progress_pct === 100 ? 'bg-emerald-500' : 'bg-amber-500'
-                    }`}
-                    style={{ width: `${p.progress_pct}%` }}
-                  />
+                {/* 4-Stage Visual Stepper */}
+                <div className="grid grid-cols-4 gap-2 pt-1">
+                  {[
+                    { threshold: 0, label: 'Manifesto', sub: p.date_made },
+                    { threshold: 25, label: 'Budget/FEC', sub: p.budget_allocated ? 'Allocated' : 'Planned' },
+                    { threshold: 50, label: 'Mobilization', sub: p.progress_pct >= 50 ? 'Active' : 'Pending' },
+                    { threshold: 100, label: 'Delivered', sub: p.progress_pct === 100 ? 'Completed' : 'Ongoing' }
+                  ].map((step, sIdx) => {
+                    const isPassed = p.progress_pct >= step.threshold && (step.threshold > 0 ? p.progress_pct >= step.threshold : true);
+                    const isCurrent = (p.progress_pct === 100 && step.threshold === 100) || (p.progress_pct >= step.threshold && p.progress_pct < (step.threshold === 0 ? 25 : step.threshold === 25 ? 50 : 100));
+
+                    return (
+                      <div key={sIdx} className="text-center space-y-1">
+                        <div
+                          className={`h-1.5 w-full rounded-full transition-all ${
+                            isPassed
+                              ? p.progress_pct === 100
+                                ? 'bg-emerald-500 shadow-sm shadow-emerald-500/50'
+                                : 'bg-amber-500 shadow-sm shadow-amber-500/50'
+                              : 'bg-zinc-800'
+                          }`}
+                        />
+                        <p className={`text-[10px] font-bold ${isCurrent ? 'text-amber-400 font-extrabold' : isPassed ? 'text-zinc-200' : 'text-zinc-600'}`}>
+                          {step.label}
+                        </p>
+                        <p className="text-[9px] text-zinc-500 font-mono">{step.sub}</p>
+                      </div>
+                    );
+
+                  })}
                 </div>
 
-                {/* Verifiable Milestones */}
+                {/* Verifiable Milestones List */}
                 <div className="pt-2 border-t border-zinc-800/60">
                   <p className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider mb-1.5">
                     Verifiable Delivery Milestones:
@@ -727,34 +761,101 @@ export const PromiseTracker: React.FC = () => {
                   <ul className="space-y-1 text-xs text-zinc-300">
                     {p.milestones.map((m, idx) => (
                       <li key={idx} className="flex items-center space-x-2">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                        <span className={`w-1.5 h-1.5 rounded-full ${p.progress_pct === 100 ? 'bg-emerald-500' : 'bg-amber-400'}`} />
                         <span>{m}</span>
                       </li>
                     ))}
                   </ul>
                 </div>
+
+                {/* Community Evidence Feed if submitted */}
+                {communityEvidenceFeed[p.id] && communityEvidenceFeed[p.id].length > 0 && (
+                  <div className="pt-2 border-t border-zinc-800/60 space-y-2">
+                    <p className="text-[11px] font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-1">
+                      <Camera className="w-3.5 h-3.5" />
+                      <span>Constituent Field Reports ({communityEvidenceFeed[p.id].length}):</span>
+                    </p>
+                    {communityEvidenceFeed[p.id].map((ev, evIdx) => (
+                      <div key={evIdx} className="bg-zinc-900 p-2.5 rounded-lg border border-zinc-800 text-[11px] space-y-1">
+                        <div className="flex justify-between font-bold">
+                          <span className="text-zinc-300">📍 {ev.location}</span>
+                          <span className="text-emerald-400 uppercase text-[10px]">{ev.statusObservation}</span>
+                        </div>
+                        <p className="text-zinc-400">{ev.description}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between pt-1 text-xs text-zinc-500 gap-2">
-                <span className="font-mono text-[11px]">Commitment Date: {p.date_made}</span>
-                {p.evidence_url ? (
-                  <a
-                    href={p.evidence_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-emerald-400 hover:text-emerald-300 font-semibold text-[11px] flex items-center space-x-1"
+              {/* Action Bar: Verify On Ground & WhatsApp Share */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between pt-1 text-xs gap-3 border-t border-zinc-800/60">
+                <div className="flex items-center space-x-2 flex-wrap gap-1">
+                  <button
+                    onClick={() => setSelectedPromiseForEvidence(p)}
+                    className="flex items-center space-x-1 px-3 py-1.5 bg-zinc-950 hover:bg-emerald-950 hover:text-emerald-400 text-zinc-300 border border-zinc-800 rounded-lg text-xs font-bold transition-all cursor-pointer"
                   >
-                    <span>Verified Cited Source</span>
-                    <ExternalLink className="w-3 h-3" />
-                  </a>
-                ) : (
-                  <span className="text-emerald-400 font-semibold text-[11px]">WSFU Evidence Audited</span>
-                )}
+                    <Camera className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>Verify On Ground</span>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      const text = `🇳🇬 *WSFU PROMISE METER AUDIT*\n\n📌 *${currentOfficial.name} (${currentOfficial.office_title})*\n📜 *Promise:* ${p.title}\n📊 *Status:* ${p.status.toUpperCase()} (${p.progress_pct}% Delivered)\n💰 *Budget:* ${p.budget_allocated || 'Statutory'}\n\nInspect full record & evidence on: ${window.location.origin}`;
+                      window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
+                    }}
+                    className="flex items-center space-x-1 px-3 py-1.5 bg-zinc-950 hover:bg-zinc-800 text-emerald-400 border border-zinc-800 rounded-lg text-xs font-bold transition-all cursor-pointer"
+                  >
+                    <MessageSquare className="w-3.5 h-3.5" />
+                    <span>Share Audit</span>
+                  </button>
+                </div>
+
+                <div>
+                  {p.evidence_url ? (
+                    <a
+                      href={p.evidence_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-emerald-400 hover:text-emerald-300 font-semibold text-[11px] flex items-center space-x-1"
+                    >
+                      <span>Verified Cited Source</span>
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
+                  ) : (
+                    <span className="text-zinc-500 font-semibold text-[11px]">WSFU Ground Audited</span>
+                  )}
+                </div>
               </div>
             </div>
           ))
         )}
       </div>
+
+      {/* Citizen Evidence Submission Modal */}
+      {selectedPromiseForEvidence && currentOfficial && (
+        <PromiseEvidenceModal
+          promise={selectedPromiseForEvidence}
+          official={currentOfficial}
+          isOpen={true}
+          onClose={() => setSelectedPromiseForEvidence(null)}
+          onSubmitEvidence={(evidence) => {
+            setCommunityEvidenceFeed(prev => ({
+              ...prev,
+              [evidence.promiseId]: [
+                ...(prev[evidence.promiseId] || []),
+                {
+                  location: evidence.location,
+                  statusObservation: evidence.statusObservation,
+                  description: evidence.description,
+                  timestamp: new Date().toLocaleDateString()
+                }
+              ]
+            }));
+          }}
+        />
+      )}
     </div>
   );
 };
+
