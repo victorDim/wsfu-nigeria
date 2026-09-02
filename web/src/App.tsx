@@ -11,8 +11,10 @@ import { DailyDigestView } from './components/DailyDigestView';
 import { UserPreferencesModal, UserPreferences, DEFAULT_PREFERENCES } from './components/UserPreferencesModal';
 import { WhatsAppBotSimulator } from './components/WhatsAppBotSimulator';
 import { AICivicAssistantModal } from './components/AICivicAssistantModal';
+import { AICivicWorkspace } from './components/AICivicWorkspace';
 import { Article } from './types';
 import { fetchNewsFeed } from './lib/api';
+
 
 import { Flame, RefreshCw, WifiOff, Shield, Sparkles, SlidersHorizontal } from 'lucide-react';
 
@@ -244,8 +246,12 @@ export const App: React.FC = () => {
         {/* Tab 5: Freedom of Information (FOI) Builder */}
         {activeTab === 'foi' && <FOIGenerator />}
 
-        {/* Tab 6: Admin Workspace (MFA Protected) */}
+        {/* Tab 6: AI Civic Intelligence Workspace (Gemini 3.7 Flash) */}
+        {activeTab === 'ai' && <AICivicWorkspace />}
+
+        {/* Tab 7: Admin Workspace (MFA Protected) */}
         {activeTab === 'admin' && <AdminPortal onArticleApproved={handleArticleApproved} />}
+
 
         {/* Tab 7: NDPR Privacy Policy */}
         {activeTab === 'privacy' && <PrivacyPolicy />}

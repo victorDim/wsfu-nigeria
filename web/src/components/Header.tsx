@@ -1,7 +1,8 @@
 import React from 'react';
 import { Newspaper, Landmark, ShieldCheck, FileText, Search, Lock, Bell, Calendar, Sparkles } from 'lucide-react';
 
-export type NavTab = 'feed' | 'digest' | 'faac' | 'promises' | 'foi' | 'admin' | 'privacy' | 'takedown';
+export type NavTab = 'feed' | 'digest' | 'faac' | 'promises' | 'foi' | 'ai' | 'admin' | 'privacy' | 'takedown';
+
 
 interface HeaderProps {
   activeTab: NavTab;
@@ -116,7 +117,23 @@ export const Header: React.FC<HeaderProps> = ({
                 <FileText className="w-3.5 h-3.5" />
                 <span>FOI</span>
               </button>
+
+              <button
+                onClick={() => setActiveTab('ai')}
+                className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  activeTab === 'ai'
+                    ? 'bg-emerald-500 text-black shadow-sm'
+                    : 'text-emerald-400 hover:text-emerald-300 hover:bg-emerald-950/40 border border-emerald-800/40'
+                }`}
+              >
+                <Sparkles className="w-3.5 h-3.5 animate-pulse" />
+                <span>AI Brain</span>
+                <span className="text-[9px] bg-emerald-950 text-emerald-400 font-mono px-1 rounded border border-emerald-700 hidden lg:inline">
+                  3.7
+                </span>
+              </button>
             </nav>
+
 
             {/* Topics Preference Button */}
             {onOpenPreferences && (
