@@ -7,6 +7,8 @@ import {
 } from 'lucide-react';
 
 
+import { callAIAsk } from '../lib/api';
+
 interface AICivicAssistantModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -38,53 +40,24 @@ export const AICivicAssistantModal: React.FC<AICivicAssistantModalProps> = ({ is
     setLoading(true);
 
     try {
-      const res = await fetch('/api/v1/ai/ask', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: q.trim() })
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        setMessages(prev => [
-          ...prev,
-          {
-            sender: 'ai',
-            text: data.answer,
-            sources: data.sources || ["Official Public Gazettes", "WSFU Intelligence"]
-          }
-        ]);
-      } else {
-        throw new Error('API Error');
-      }
-    } catch {
-      // High-grade offline heuristic fallback
-      setTimeout(() => {
-        let answer = "🇳🇬 **WSFU Civic Analysis:**\n\n";
-        const upper = q.toUpperCase();
-        if (upper.includes('FAAC') || upper.includes('LAGOS') || upper.includes('RIVERS') || upper.includes('MONEY')) {
-          answer += "• **Federation Allocations:** Under current revenue sharing, the Federal Government takes 52.68%, 36 States share 26.72%, and 774 LGAs receive 20.60%.\n• **Deductions:** States with external loan exposure (like Lagos and Kaduna) have multilateral debt deductions debited at source before vault release.\n• **Per-Capita Impact:** Average annual state spending power ranges from ₦17,600 per citizen in Kano to ₦58,000 in Delta.";
-        } else if (upper.includes('LGA') || upper.includes('AUTONOMY') || upper.includes('COUNCIL')) {
-          answer += "• **Supreme Court Ruling (July 2024):** The Supreme Court of Nigeria delivered a landmark ruling barring state governors from receiving, withholding, or intercepting direct federation allocations belonging to 774 local government councils.\n• **Direct Account:** All LGA disbursements must be credited directly into democratically elected council accounts.";
-        } else {
-          answer += "• **Freedom of Information Act 2011:** Under Section 1 & 4, every citizen has a legally enforceable right to request public records from any ministry, department, or agency (MDA) within 7 working days.\n• **Section 7 Default:** If an MDA refuses or ignores a valid request, it constitutes a statutory violation subject to court orders and administrative sanctions.";
+      const data = await callAIAsk(q.trim());
+      setMessages(prev => [
+        ...prev,
+        {
+          sender: 'ai',
+          text: data.answer,
+          sources: data.sources || ["Official Public Gazettes", "WSFU Intelligence"]
         }
-
-        setMessages(prev => [
-          ...prev,
-          {
-            sender: 'ai',
-            text: answer,
-            sources: ["Supreme Court of Nigeria", "FAAC Sub-Committee", "NBS 2024"]
-          }
-        ]);
-      }, 500);
+      ]);
+    } catch {
+      // Fallback
     } finally {
       setLoading(false);
     }
   };
 
   return (
+
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
       <div className="bg-zinc-900 border border-zinc-800 w-full max-w-2xl h-[85vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden relative">
         {/* Modal Header */}

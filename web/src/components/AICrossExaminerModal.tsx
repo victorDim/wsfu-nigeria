@@ -25,6 +25,8 @@ interface AuditData {
   verdict: string;
 }
 
+import { callAICrossExamine } from '../lib/api';
+
 export const AICrossExaminerModal: React.FC<AICrossExaminerModalProps> = ({ article, isOpen, onClose }) => {
   const [loading, setLoading] = useState(true);
   const [auditData, setAuditData] = useState<AuditData | null>(null);
@@ -35,38 +37,15 @@ export const AICrossExaminerModal: React.FC<AICrossExaminerModalProps> = ({ arti
     const runAudit = async () => {
       setLoading(true);
       try {
-        const res = await fetch('/api/v1/ai/cross-examine', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            title: article.title,
-            content: article.article_summaries?.tldr_bullets?.join(' ') || article.title,
-            source_name: article.sources?.name || 'Verified Wire',
-            category: article.category || 'National'
-          })
-        });
-
-        if (res.ok) {
-          const data = await res.json();
-          setAuditData(data);
-        } else {
-          throw new Error('API Error');
-        }
+        const data = await callAICrossExamine(
+          article.title,
+          article.article_summaries?.tldr_bullets?.join(' ') || article.title,
+          article.sources?.name || 'Verified Wire',
+          article.category || 'National'
+        );
+        setAuditData(data);
       } catch {
-        // Deterministic fallback
-        setAuditData({
-          truth_score: 88,
-          bias_rating: "Objective Reporting",
-          verified_facts: [
-            "Disbursement figures corroborate with official Federation Account records.",
-            "Direct quote attributed to official gazette / authorized ministry spokesperson."
-          ],
-          unverified_claims: [
-            "Timeline for project completion depends on subsequent capital budget cash backing."
-          ],
-          missing_context: "Does not mention the statutory debt servicing deductions applied at source.",
-          verdict: "Corroborated across 3 national dailies (Punch, Premium Times, The Cable)."
-        });
+        // Fallback
       } finally {
         setLoading(false);
       }
@@ -74,6 +53,7 @@ export const AICrossExaminerModal: React.FC<AICrossExaminerModalProps> = ({ arti
 
     runAudit();
   }, [isOpen, article]);
+
 
   if (!isOpen) return null;
 

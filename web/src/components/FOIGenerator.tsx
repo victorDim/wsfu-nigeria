@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { FileText, Send, Clock, Copy, Check, Printer, AlertCircle, Sparkles, RefreshCw } from 'lucide-react';
-import { submitFOIRequest } from '../lib/api';
+import { submitFOIRequest, callAIPolishFOI } from '../lib/api';
 import { FOIRequest } from '../types';
-
 import { FOITrackerDashboard } from './FOITrackerDashboard';
+
 
 export const FOIGenerator: React.FC = () => {
   const [viewMode, setViewMode] = useState<'dashboard' | 'generator'>('dashboard');
@@ -21,26 +21,20 @@ export const FOIGenerator: React.FC = () => {
     if (!details.trim()) return;
     setPolishingAI(true);
     try {
-      const res = await fetch('/api/v1/ai/polish-foi', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          mda_name: mdaName || 'Federal Ministry / Public Institution',
-          subject: subject || 'Request for Public Records',
-          raw_notes: details
-        })
-      });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.formal_subject && !subject) setSubject(data.formal_subject);
-        if (data.polished_details) setDetails(data.polished_details);
-      }
+      const data = await callAIPolishFOI(
+        mdaName || 'Federal Ministry / Public Institution',
+        subject || 'Request for Public Records',
+        details
+      );
+      if (data.formal_subject && !subject) setSubject(data.formal_subject);
+      if (data.polished_details) setDetails(data.polished_details);
     } catch (err) {
       console.error(err);
     } finally {
       setPolishingAI(false);
     }
   };
+
 
 
   const handleSubmit = async (e: React.FormEvent) => {
