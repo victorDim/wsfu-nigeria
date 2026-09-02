@@ -1,0 +1,30 @@
+services:
+  # ---------------------------------------------------------------------------
+  # 1. WSFU FastAPI Backend API
+  # ---------------------------------------------------------------------------
+  - type: web
+    name: wsfu-api
+    runtime: python
+    region: frankfurt
+    plan: free
+    buildCommand: pip install --upgrade pip && pip install -r backend/requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT --app-dir backend
+    healthCheckPath: /api/v1/health
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.1
+      - key: ENVIRONMENT
+        value: production
+      - key: PROJECT_NAME
+        value: WSFU - Who Swear For Us
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_MODEL
+        value: gemini-3.6-flash
