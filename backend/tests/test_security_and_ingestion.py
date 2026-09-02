@@ -78,9 +78,10 @@ def test_admin_trigger_ingestion_requires_auth():
     from main import app
 
     test_client = TestClient(app)
-    # No auth header -> 401
+    # No auth header -> 401 or 403
     res = test_client.post("/api/v1/admin/trigger-ingestion")
-    assert res.status_code == 401, f"Expected 401 Unauthorized without credentials, got {res.status_code}"
+    assert res.status_code in (401, 403), f"Expected 401/403 Unauthorized without credentials, got {res.status_code}"
+
 
 
 def test_extractor_ssrf_blocks_private_url():

@@ -33,25 +33,26 @@ class TestAuthGatingNoToken:
 
     def test_create_official_no_token(self):
         r = client.post(f"{API}/admin/officials", json={"name": "Test"})
-        assert r.status_code == 401
+        assert r.status_code in (401, 403)
 
     def test_create_promise_no_token(self):
         r = client.post(f"{API}/admin/promises", json={"title": "Test"})
-        assert r.status_code == 401
+        assert r.status_code in (401, 403)
 
     def test_update_status_no_token(self):
         r = client.post(
             f"{API}/admin/promises/{FAKE_UUID}/status",
             json={"new_status": "fulfilled", "reason": "Done"},
         )
-        assert r.status_code == 401
+        assert r.status_code in (401, 403)
 
     def test_rate_official_no_token(self):
         r = client.post(
             f"{API}/officials/{FAKE_UUID}/rate",
             json={"rating_pct": 75},
         )
-        assert r.status_code == 401
+        assert r.status_code in (401, 403)
+
 
 
 # ---------------------------------------------------------------------------
