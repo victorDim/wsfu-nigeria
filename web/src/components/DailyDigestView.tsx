@@ -77,39 +77,40 @@ export const DailyDigestView: React.FC<DailyDigestViewProps> = ({ articles }) =>
   return (
     <div className="space-y-6 animate-fadeIn">
       {/* Executive Daily Digest Banner */}
-      <div className="bg-gradient-to-r from-emerald-950 via-zinc-900 to-zinc-950 border border-emerald-800/50 rounded-2xl p-6 shadow-xl space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-800/80 pb-4">
+      <div className="bg-[#0e1017] border border-zinc-800 rounded-2xl p-6 sm:p-7 shadow-xl space-y-5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-800/80 pb-5">
           <div>
-            <div className="flex items-center space-x-2 text-emerald-400 font-bold text-xs uppercase tracking-wider mb-1">
+            <div className="flex items-center space-x-2 text-emerald-400 font-bold text-xs uppercase tracking-wider mb-1.5">
               <Calendar className="w-4 h-4" />
               <span>EXECUTIVE 24-HOUR CIVIC DIGEST • {todayStr}</span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-black text-white">
+            <h1 className="text-2xl sm:text-3xl font-serif-editorial font-bold text-white tracking-tight">
               What Happened in Nigeria Today
             </h1>
-            <p className="text-xs sm:text-sm text-zinc-300 mt-1 max-w-2xl">
-              A curated executive overview of major public fund disbursements, accountability investigations, and civic developments across Nigeria.
+            <p className="text-xs sm:text-sm text-zinc-400 mt-1 max-w-2xl leading-relaxed">
+              A curated overview of public disbursements, statutory accountability investigations, and civic developments across Nigeria.
             </p>
           </div>
 
           <div className="flex items-center space-x-2 flex-wrap gap-2">
             <button
               onClick={handleWhatsAppShare}
-              className="flex items-center space-x-1.5 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs rounded-xl shadow-lg shadow-emerald-900/40 transition-all cursor-pointer"
+              className="flex items-center space-x-1.5 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs rounded-xl shadow-md shadow-emerald-950 transition-all cursor-pointer"
             >
               <MessageSquare className="w-4 h-4" />
-              <span>Share Daily Digest to WhatsApp</span>
+              <span>Share to WhatsApp</span>
             </button>
 
             <button
               onClick={handleCopyDigest}
-              className="flex items-center space-x-1.5 px-3 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-bold text-xs rounded-xl transition-all cursor-pointer"
+              className="flex items-center space-x-1.5 px-3 py-2.5 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 font-semibold text-xs rounded-xl border border-zinc-800 transition-all cursor-pointer"
             >
               {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
-              <span>{copied ? 'Copied!' : 'Copy Summary'}</span>
+              <span>{copied ? 'Copied' : 'Copy Summary'}</span>
             </button>
           </div>
         </div>
+
 
         {/* 3 Executive Pillars */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">

@@ -16,7 +16,8 @@ import { Article } from './types';
 import { fetchNewsFeed } from './lib/api';
 
 
-import { Flame, RefreshCw, WifiOff, Shield, Sparkles, SlidersHorizontal } from 'lucide-react';
+import { Flame, RefreshCw, WifiOff, Shield, Compass, SlidersHorizontal } from 'lucide-react';
+
 
 
 export const App: React.FC = () => {
@@ -154,15 +155,16 @@ export const App: React.FC = () => {
                   </button>
                   <button
                     onClick={() => setFeedMode('personalized')}
-                    className={`px-2.5 py-1 rounded-md font-bold flex items-center space-x-1 transition-all cursor-pointer ${
+                    className={`px-2.5 py-1 rounded-md font-bold flex items-center space-x-1.5 transition-all cursor-pointer ${
                       feedMode === 'personalized'
                         ? 'bg-emerald-500 text-black shadow-sm'
-                        : 'text-zinc-500 hover:text-zinc-300'
+                        : 'text-zinc-400 hover:text-zinc-200'
                     }`}
                   >
-                    <Sparkles className="w-3 h-3" />
+                    <SlidersHorizontal className="w-3 h-3" />
                     <span>My Topics</span>
                   </button>
+
                 </div>
               </div>
 
@@ -304,14 +306,15 @@ export const App: React.FC = () => {
         </div>
       </footer>
 
-      {/* Floating Ask WSFU AI Button */}
+      {/* Floating Ask Research Desk Button */}
       <button
         onClick={() => setIsAIAssistantOpen(true)}
-        className="fixed bottom-6 left-6 z-40 flex items-center space-x-2 px-4 py-3 bg-gradient-to-r from-emerald-600 to-zinc-900 hover:from-emerald-500 hover:to-zinc-800 text-white font-extrabold text-xs rounded-full shadow-2xl shadow-emerald-950/80 border border-emerald-400/40 transition-all hover:scale-105 cursor-pointer"
+        className="fixed bottom-6 left-6 z-40 flex items-center space-x-2 px-4 py-2.5 bg-[#0e1017]/95 hover:bg-zinc-800 text-emerald-400 font-bold text-xs rounded-full shadow-2xl border border-zinc-700/80 backdrop-blur-md transition-all hover:scale-105 cursor-pointer"
       >
-        <Sparkles className="w-5 h-5 text-emerald-300" />
-        <span>Ask WSFU AI</span>
+        <Compass className="w-4 h-4 text-emerald-400" />
+        <span>Ask Research Desk</span>
       </button>
+
 
 
       {/* Floating Interactive WhatsApp Civic Bot Simulator */}

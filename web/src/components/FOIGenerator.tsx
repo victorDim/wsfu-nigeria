@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
-import { FileText, Send, Clock, Copy, Check, Printer, AlertCircle, Sparkles, RefreshCw } from 'lucide-react';
+import { FileText, Send, Clock, Copy, Check, Printer, AlertCircle, RefreshCw } from 'lucide-react';
+
+
 import { submitFOIRequest, callAIPolishFOI } from '../lib/api';
 import { FOIRequest } from '../types';
 import { FOITrackerDashboard } from './FOITrackerDashboard';
@@ -292,10 +294,10 @@ ${citizenName || 'Applicant'}
                 type="button"
                 onClick={handleAIPolish}
                 disabled={polishingAI || !details.trim()}
-                className="flex items-center space-x-1 px-2.5 py-1 bg-gradient-to-r from-emerald-950 to-zinc-900 hover:from-emerald-900 hover:to-zinc-800 text-emerald-400 border border-emerald-800/60 rounded-lg text-xs font-bold transition-all cursor-pointer disabled:opacity-50"
+                className="flex items-center space-x-1.5 px-3 py-1 bg-zinc-900 hover:bg-zinc-800 text-emerald-400 border border-zinc-700/80 rounded-lg text-xs font-semibold transition-all cursor-pointer disabled:opacity-50"
               >
-                {polishingAI ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
-                <span>{polishingAI ? 'AI Polishing...' : '✨ AI Polish & Cite Sections'}</span>
+                {polishingAI ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <FileText className="w-3.5 h-3.5" />}
+                <span>{polishingAI ? 'Formatting...' : 'Format as Legal Notice & Cite Sections'}</span>
               </button>
             </div>
             <textarea
@@ -303,9 +305,10 @@ ${citizenName || 'Applicant'}
               rows={5}
               value={details}
               onChange={(e) => setDetails(e.target.value)}
-              placeholder="Specify the exact contract sums, project locations, payment dates, or official records you are requesting pursuant to Section 1 of the Freedom of Information Act 2011 (or type rough notes and click ✨ AI Polish)..."
+              placeholder="Specify the exact contract sums, project locations, payment dates, or official records you are requesting pursuant to Section 1 of the Freedom of Information Act 2011 (or type rough notes and click 'Format as Legal Notice')..."
               className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500 text-xs"
             />
+
           </div>
 
 

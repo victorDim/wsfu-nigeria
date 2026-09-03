@@ -1,8 +1,7 @@
 import React from 'react';
-import { Newspaper, Landmark, ShieldCheck, FileText, Search, Lock, Bell, Calendar, Sparkles } from 'lucide-react';
+import { Newspaper, Landmark, ShieldCheck, FileText, Search, Lock, Bell, Calendar, Compass, SlidersHorizontal } from 'lucide-react';
 
 export type NavTab = 'feed' | 'digest' | 'faac' | 'promises' | 'foi' | 'ai' | 'admin' | 'privacy' | 'takedown';
-
 
 interface HeaderProps {
   activeTab: NavTab;
@@ -19,50 +18,50 @@ export const Header: React.FC<HeaderProps> = ({
   searchQuery,
   setSearchQuery,
   onOpenPreferences,
-  pendingApprovalsCount = 2
+  pendingApprovalsCount = 0
 }) => {
   return (
-    <header className="sticky top-0 z-50 bg-zinc-950/90 backdrop-blur-md border-b border-zinc-800">
+    <header className="sticky top-0 z-50 bg-[#090a0d]/95 backdrop-blur-md border-b border-zinc-800/80">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo & Tagline */}
           <div className="flex items-center space-x-3 cursor-pointer" onClick={() => setActiveTab('feed')}>
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-green-700 flex items-center justify-center font-black text-xl text-black shadow-lg shadow-emerald-500/20">
+            <div className="w-9 h-9 rounded-xl bg-emerald-500 flex items-center justify-center font-black text-lg text-black shadow-md shadow-emerald-500/20">
               W
             </div>
             <div>
               <div className="flex items-center space-x-2">
-                <span className="font-extrabold text-xl tracking-tight text-white">WSFU</span>
-                <span className="text-xs bg-emerald-950 text-emerald-400 font-semibold px-2 py-0.5 rounded-full border border-emerald-800/60">
-                  NIGERIA
+                <span className="font-extrabold text-lg tracking-tight text-white">WSFU</span>
+                <span className="text-[10px] bg-emerald-950 text-emerald-400 font-bold px-2 py-0.5 rounded-full border border-emerald-800/60 uppercase">
+                  Nigeria
                 </span>
               </div>
               <p className="text-[11px] text-zinc-400 tracking-wide font-medium hidden sm:block">
-                Who Swear For Us • Citizen Accountability & News
+                Who Swear For Us • Citizen Accountability & Records
               </p>
             </div>
           </div>
 
           {/* Search bar */}
-          <div className="hidden md:flex items-center relative w-56">
-            <Search className="w-4 h-4 text-zinc-400 absolute left-3" />
+          <div className="hidden md:flex items-center relative w-60">
+            <Search className="w-3.5 h-3.5 text-zinc-400 absolute left-3" />
             <input
               type="text"
-              placeholder="Search corruption, FAAC, states..."
+              placeholder="Search contracts, FAAC, states..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-zinc-900 border border-zinc-800 rounded-lg pl-9 pr-3 py-1.5 text-xs text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-emerald-500 transition-colors"
+              className="w-full bg-[#11131a] border border-zinc-800 rounded-lg pl-8 pr-3 py-1.5 text-xs text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-emerald-500 transition-colors"
             />
           </div>
 
-          {/* Navigation & Preferences */}
+          {/* Navigation & Actions */}
           <div className="flex items-center space-x-2">
-            <nav className="flex items-center space-x-1 sm:space-x-1.5">
+            <nav className="flex items-center space-x-1 sm:space-x-1.5 overflow-x-auto">
               <button
                 onClick={() => setActiveTab('feed')}
                 className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                   activeTab === 'feed'
-                    ? 'bg-emerald-500 text-black shadow-sm'
+                    ? 'bg-zinc-800 text-white shadow-sm border border-zinc-700'
                     : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900'
                 }`}
               >
@@ -74,19 +73,20 @@ export const Header: React.FC<HeaderProps> = ({
                 onClick={() => setActiveTab('digest')}
                 className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                   activeTab === 'digest'
-                    ? 'bg-emerald-500 text-black shadow-sm'
+                    ? 'bg-zinc-800 text-white shadow-sm border border-zinc-700'
                     : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900'
                 }`}
               >
                 <Calendar className="w-3.5 h-3.5" />
-                <span>Daily Digest</span>
+                <span className="hidden sm:inline">Daily</span>
+                <span>Digest</span>
               </button>
 
               <button
                 onClick={() => setActiveTab('faac')}
                 className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                   activeTab === 'faac'
-                    ? 'bg-emerald-500 text-black shadow-sm'
+                    ? 'bg-zinc-800 text-white shadow-sm border border-zinc-700'
                     : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900'
                 }`}
               >
@@ -98,7 +98,7 @@ export const Header: React.FC<HeaderProps> = ({
                 onClick={() => setActiveTab('promises')}
                 className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                   activeTab === 'promises'
-                    ? 'bg-emerald-500 text-black shadow-sm'
+                    ? 'bg-zinc-800 text-white shadow-sm border border-zinc-700'
                     : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900'
                 }`}
               >
@@ -110,7 +110,7 @@ export const Header: React.FC<HeaderProps> = ({
                 onClick={() => setActiveTab('foi')}
                 className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                   activeTab === 'foi'
-                    ? 'bg-emerald-500 text-black shadow-sm'
+                    ? 'bg-zinc-800 text-white shadow-sm border border-zinc-700'
                     : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900'
                 }`}
               >
@@ -126,30 +126,28 @@ export const Header: React.FC<HeaderProps> = ({
                     : 'text-emerald-400 hover:text-emerald-300 hover:bg-emerald-950/40 border border-emerald-800/40'
                 }`}
               >
-                <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
-                <span>AI Assistant</span>
+                <Compass className="w-3.5 h-3.5" />
+                <span>Research Desk</span>
               </button>
             </nav>
-
-
 
             {/* Topics Preference Button */}
             {onOpenPreferences && (
               <button
                 onClick={onOpenPreferences}
-                className="p-1.5 bg-zinc-900 hover:bg-zinc-800 text-emerald-400 rounded-lg border border-zinc-800 transition-colors cursor-pointer"
-                title="Personalize Followed Topics & State"
+                className="p-2 bg-[#11131a] hover:bg-zinc-800 text-zinc-300 hover:text-white rounded-lg border border-zinc-800 transition-colors cursor-pointer"
+                title="Customize Followed States & Topics"
               >
-                <Sparkles className="w-4 h-4" />
+                <SlidersHorizontal className="w-4 h-4" />
               </button>
             )}
 
-            {/* Urgent Admin Approval Alert Bell */}
+            {/* Admin Approval Badge */}
             {pendingApprovalsCount > 0 && (
               <button
                 onClick={() => setActiveTab('admin')}
-                className="flex items-center space-x-1.5 px-2.5 py-1.5 bg-amber-500/15 hover:bg-amber-500 text-amber-300 hover:text-black border border-amber-500/30 rounded-lg text-xs font-extrabold transition-all cursor-pointer shadow-sm animate-pulse"
-                title={`${pendingApprovalsCount} news summaries waiting for your immediate editorial review!`}
+                className="flex items-center space-x-1.5 px-2.5 py-1.5 bg-amber-500/15 hover:bg-amber-500 text-amber-300 hover:text-black border border-amber-500/30 rounded-lg text-xs font-bold transition-all cursor-pointer shadow-sm"
+                title={`${pendingApprovalsCount} news summaries waiting for editorial review`}
               >
                 <Bell className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">{pendingApprovalsCount} Pending</span>
@@ -157,17 +155,17 @@ export const Header: React.FC<HeaderProps> = ({
               </button>
             )}
 
-            {/* Admin Lock Button */}
+            {/* Admin Portal Lock */}
             <button
               onClick={() => setActiveTab('admin')}
-              className={`flex items-center space-x-1 px-2 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+              className={`flex items-center space-x-1 p-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                 activeTab === 'admin'
                   ? 'bg-rose-600 text-white shadow-sm'
                   : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-900'
               }`}
-              title="Admin Staff Portal"
+              title="Editorial Admin Staff"
             >
-              <Lock className="w-3.5 h-3.5 text-rose-400" />
+              <Lock className="w-3.5 h-3.5 text-zinc-400" />
             </button>
           </div>
         </div>
@@ -175,4 +173,3 @@ export const Header: React.FC<HeaderProps> = ({
     </header>
   );
 };
-

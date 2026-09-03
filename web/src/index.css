@@ -4,7 +4,29 @@
 
 @layer base {
   body {
-    @apply bg-zinc-950 text-zinc-100 selection:bg-emerald-500 selection:text-black;
-    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    @apply bg-[#090a0d] text-zinc-100 selection:bg-emerald-500 selection:text-black;
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    letter-spacing: -0.01em;
+  }
+
+  h1, h2, h3, .font-serif-editorial {
+    font-family: 'Newsreader', Georgia, serif;
   }
 }
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #090a0d;
+}
+::-webkit-scrollbar-thumb {
+  background: #27272a;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #3f3f46;
+}
+
