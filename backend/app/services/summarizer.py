@@ -1,9 +1,4 @@
-"""
-WSFU AI Summarizer & Entity Extraction Service
-Protected against Indirect Prompt Injection (Critical Rule 10).
-Enforces Mandatory Human Review Before Publish (Critical Rule 9).
-"""
-
+import os
 import json
 import asyncio
 import logging
@@ -11,6 +6,7 @@ from typing import Optional, Dict, Any, List
 from pydantic import BaseModel, Field
 from google import genai
 from google.genai import types
+from groq import Groq
 from app.core.config import settings
 
 logger = logging.getLogger("wsfu.summarizer")
@@ -45,7 +41,6 @@ class AISummaryOutput(BaseModel):
     )
 
 
-
 PROMPT_TEMPLATE = """
 You are an objective, non-partisan civic-journalism AI assistant for "WSFU (Who Swear For Us)", a Nigerian accountability platform.
 
@@ -66,16 +61,62 @@ Body:
 """
 
 
+def _sync_generate_groq_summary(prompt: str) -> Optional[str]:
+    """Helper to generate structured JSON summary using Groq Llama 3.1 / 3.3."""
+    key = (settings.GROQ_API_KEY or os.environ.get("GROQ_API_KEY", "")).strip()
+    if not key:
+        return None
+    try:
+        client = Groq(api_key=key)
+        candidate_models = [
+            settings.GROQ_MODEL,
+            "llama-3.1-8b-instant",
+            "llama-3.3-70b-versatile"
+        ]
+        seen = set()
+        models = [m for m in candidate_models if m and not (m in seen or seen.add(m))]
+        for model in models:
+            try:
+                response = client.chat.completions.create(
+                    model=model,
+                    messages=[
+                        {
+                            "role": "system",
+                            "content": (
+                                "You are a professional civic news analyst. You MUST return ONLY a valid JSON object strictly matching the schema with keys: "
+                                "'category' (string), 'tldr_bullets' (list of 3 strings), 'civic_impact' (string), 'actors_entities' (list of strings), "
+                                "'figures_mentioned' (list of objects with 'amount' and 'currency'), 'confidence_score' (float). Do NOT wrap in markdown fences."
+                            )
+                        },
+                        {"role": "user", "content": prompt}
+                    ],
+                    response_format={"type": "json_object"},
+                    temperature=0.1,
+                    max_tokens=1000
+                )
+                if response and response.choices and response.choices[0].message.content:
+                    return response.choices[0].message.content
+            except Exception as e:
+                logger.debug(f"Groq summarization attempt with {model} failed: {e}")
+                continue
+    except Exception as exc:
+        logger.warning(f"Groq client initialization in summarizer failed: {exc}")
+    return None
+
+
 def _sync_generate_content(prompt: str, model_name: str) -> Optional[str]:
     """Helper to run the blocking Gemini SDK call in a worker thread."""
-    client = genai.Client(api_key=settings.GEMINI_API_KEY)
+    key = (settings.GEMINI_API_KEY or os.environ.get("GEMINI_API_KEY", "")).strip()
+    if not key:
+        return None
+    client = genai.Client(api_key=key)
     response = client.models.generate_content(
         model=model_name,
         contents=prompt,
         config=types.GenerateContentConfig(
             response_mime_type="application/json",
             response_schema=AISummaryOutput,
-            temperature=0.1,  # Low temperature for factual consistency
+            temperature=0.1,
         ),
     )
     return response.text if response else None
@@ -83,8 +124,11 @@ def _sync_generate_content(prompt: str, model_name: str) -> Optional[str]:
 
 def _sync_generate_embedding(text: str) -> Optional[List[float]]:
     """Helper to generate 768-dimensional text embedding for pgvector."""
+    key = (settings.GEMINI_API_KEY or os.environ.get("GEMINI_API_KEY", "")).strip()
+    if not key:
+        return None
     try:
-        client = genai.Client(api_key=settings.GEMINI_API_KEY)
+        client = genai.Client(api_key=key)
         response = client.models.embed_content(
             model="gemini-embedding-001",
             contents=text[:2000],
@@ -97,14 +141,44 @@ def _sync_generate_embedding(text: str) -> Optional[List[float]]:
     return None
 
 
-
 async def generate_summary(title: str, body: str, source_name: str) -> Optional[Dict[str, Any]]:
     """
     Generates a structured AI summary with entities and civic impact asynchronously.
     Output is marked as 'pending_review' to ensure mandatory human review boundary.
     """
-    if not settings.GEMINI_API_KEY:
-        logger.warning("GEMINI_API_KEY is not set. Skipping live AI summarization.")
+    clean_body = body[:4000].replace("<untrusted_article_content>", "").replace("</untrusted_article_content>", "")
+    prompt = PROMPT_TEMPLATE.format(title=title, source_name=source_name, body=clean_body)
+
+    raw_text = None
+
+    # 1. Try Groq AI first
+    if settings.GROQ_API_KEY or os.environ.get("GROQ_API_KEY"):
+        try:
+            raw_text = await asyncio.to_thread(_sync_generate_groq_summary, prompt)
+        except Exception as groq_err:
+            logger.debug(f"Groq summary failed: {groq_err}. Trying Gemini...")
+
+    # 2. Try Gemini if Groq did not produce output
+    if not raw_text and (settings.GEMINI_API_KEY or os.environ.get("GEMINI_API_KEY")):
+        model_candidates = [
+            getattr(settings, "GEMINI_MODEL", "gemini-2.0-flash"),
+            "gemini-2.0-flash",
+            "gemini-1.5-flash",
+            "gemini-2.5-flash"
+        ]
+        seen = set()
+        models = [m for m in model_candidates if m and not (m in seen or seen.add(m))]
+        for model in models:
+            try:
+                raw_text = await asyncio.to_thread(_sync_generate_content, prompt, model)
+                if raw_text:
+                    break
+            except Exception as model_err:
+                logger.debug(f"Gemini model '{model}' attempt failed: {model_err}")
+                continue
+
+    # 3. If neither AI returned output, provide safe structured fallback
+    if not raw_text:
         return {
             "category": "National",
             "tldr_bullets": [
@@ -121,50 +195,26 @@ async def generate_summary(title: str, body: str, source_name: str) -> Optional[
         }
 
     try:
-        # Sanitize body length and format
-        clean_body = body[:4000].replace("<untrusted_article_content>", "").replace("</untrusted_article_content>", "")
-        prompt = PROMPT_TEMPLATE.format(title=title, source_name=source_name, body=clean_body)
-        
-        model_candidates = [
-            getattr(settings, "GEMINI_MODEL", "gemini-3.6-flash"),
-            "gemini-3.6-flash",
-            "gemini-3.7-flash",
-            "gemini-flash-latest",
-            "gemini-3.5-flash"
-        ]
+        parsed = json.loads(raw_text)
+        parsed["status"] = "pending_review"  # Mandatory human review gate
 
-        
-        raw_text = None
-        for model in model_candidates:
-            try:
-                raw_text = await asyncio.to_thread(_sync_generate_content, prompt, model)
-                if raw_text:
-                    break
-            except Exception as model_err:
-                logger.debug(f"Gemini model '{model}' attempt failed: {model_err}")
-                continue
-        
-        if raw_text:
-            parsed = json.loads(raw_text)
-            parsed["status"] = "pending_review"  # Mandatory human review gate
-            
-            # Format figures to plain dicts
-            if "figures_mentioned" in parsed and isinstance(parsed["figures_mentioned"], list):
-                clean_figs = []
-                for f in parsed["figures_mentioned"]:
-                    if isinstance(f, dict):
-                        clean_figs.append(f)
-                    elif hasattr(f, "model_dump"):
-                        clean_figs.append(f.model_dump())
-                parsed["figures_mentioned"] = clean_figs
+        # Format figures to plain dicts
+        if "figures_mentioned" in parsed and isinstance(parsed["figures_mentioned"], list):
+            clean_figs = []
+            for f in parsed["figures_mentioned"]:
+                if isinstance(f, dict):
+                    clean_figs.append(f)
+                elif hasattr(f, "model_dump"):
+                    clean_figs.append(f.model_dump())
+            parsed["figures_mentioned"] = clean_figs
 
-            # Generate embedding asynchronously if possible
-            embedding = await asyncio.to_thread(_sync_generate_embedding, f"{title}\n{parsed.get('civic_impact', '')}")
-            parsed["embedding"] = embedding
-            return parsed
-        return None
+        # Generate embedding asynchronously if possible
+        embedding = await asyncio.to_thread(_sync_generate_embedding, f"{title}\n{parsed.get('civic_impact', '')}")
+        parsed["embedding"] = embedding
+        return parsed
     except Exception as e:
-        logger.error(f"Error during AI summarization for '{title[:40]}': {str(e)}", exc_info=True)
+        logger.error(f"Error parsing AI summary for '{title[:40]}': {str(e)}", exc_info=True)
         return None
+
 
 

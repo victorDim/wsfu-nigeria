@@ -64,11 +64,23 @@ def test_whatsapp_simulate_endpoint():
 
 
 def test_meta_webhook_verification_challenge():
+    from app.core.config import settings
+    # 1. Valid Token returns challenge
     params = {
         "hub.mode": "subscribe",
         "hub.challenge": "1158201444",
-        "hub.verify_token": "wsfu-test-token"
+        "hub.verify_token": settings.WHATSAPP_VERIFY_TOKEN
     }
     res = client.get("/api/v1/whatsapp/webhook", params=params)
     assert res.status_code == 200
     assert res.text == "1158201444"
+
+    # 2. Invalid Token returns 403
+    bad_params = {
+        "hub.mode": "subscribe",
+        "hub.challenge": "1158201444",
+        "hub.verify_token": "wrong_unauthorized_token"
+    }
+    bad_res = client.get("/api/v1/whatsapp/webhook", params=bad_params)
+    assert bad_res.status_code == 403
+

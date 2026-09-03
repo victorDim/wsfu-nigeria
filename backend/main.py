@@ -31,12 +31,20 @@ async def lifespan(app: FastAPI):
         print("[SHUTDOWN] Scheduler stopped.")
 
 
+from slowapi.errors import RateLimitExceeded
+from slowapi import _rate_limit_exceeded_handler
+from app.core.limiter import limiter
+
 app = FastAPI(
     title=settings.PROJECT_NAME,
     description="Nigeria-focused Citizen Accountability, Government Spending & News Platform",
     version="1.0.0",
     lifespan=lifespan
 )
+
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
 
 # CORS Configuration (Supports local dev, Vercel deployments & production domains)
 app.add_middleware(

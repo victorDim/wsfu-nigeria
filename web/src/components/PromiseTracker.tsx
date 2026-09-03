@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { OfficialProfile, TrackedPromise } from '../types';
+
 import { ALL_NIGERIAN_STATES, getOfficialsForState, NIGERIA_DISCO_ALLOCATIONS } from '../lib/officials_data';
 import { submitCitizenRating, fetchOfficials } from '../lib/api';
 import { supabase } from '../lib/supabase';
@@ -48,6 +49,11 @@ export const PromiseTracker: React.FC = () => {
   }>>>({});
 
 
+  // Initial live load on mount
+  useEffect(() => {
+    handleStateChange(selectedStateCode);
+  }, []);
+
   // Synchronous initial load with async live refresh
   const handleStateChange = async (stateCode: string) => {
     setSelectedStateCode(stateCode);
@@ -70,6 +76,10 @@ export const PromiseTracker: React.FC = () => {
       const liveList = await fetchOfficials(stateCode);
       if (liveList && liveList.length > 0) {
         setOfficials(liveList);
+        const updatedTarget = liveList.find(o => o.role === (activeTier === 'governor' ? 'governor' : activeTier)) || liveList[0];
+        if (updatedTarget) {
+          setSelectedOfficialId(updatedTarget.id);
+        }
       }
     } catch {
       // Graceful fallback to static list
@@ -121,6 +131,14 @@ export const PromiseTracker: React.FC = () => {
       return;
     }
 
+    // Guard UUID check to prevent mock slug submission
+    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(currentOfficial.id);
+    if (!isUUID) {
+      setRatingMessage("Syncing official record from database... please try in a moment.");
+      await handleStateChange(selectedStateCode);
+      return;
+    }
+
     setUserVoted(prev => ({ ...prev, [currentOfficial.id]: stars }));
     setRatingMessage(`Submitting your ${stars}-Star (${ratingPct}%) approval rating...`);
 
@@ -132,6 +150,7 @@ export const PromiseTracker: React.FC = () => {
     }
     setTimeout(() => setRatingMessage(null), 4000);
   };
+
 
 
   const getStatusBadge = (status: TrackedPromise['status']) => {

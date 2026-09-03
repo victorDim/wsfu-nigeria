@@ -1,14 +1,12 @@
-"""
-FastAPI WhatsApp Webhook & Bot Endpoints
-Supports Meta Cloud API & Twilio Webhook formats for citizen transparency queries.
-"""
-
+import hmac
+import hashlib
 import logging
 from datetime import datetime, timezone
 from typing import Dict, Any, Optional
-from fastapi import APIRouter, Request, Response, Query, HTTPException
+from fastapi import APIRouter, Request, Response, Query, HTTPException, status
 from pydantic import BaseModel, Field
 
+from app.core.config import settings
 from app.services.whatsapp_bot import process_whatsapp_query
 
 logger = logging.getLogger("wsfu.whatsapp")
@@ -34,9 +32,16 @@ async def verify_meta_webhook(
 ):
     """
     Handles Meta WhatsApp Cloud API webhook handshake & verification challenge.
+    Validates token against configured WHATSAPP_VERIFY_TOKEN.
     """
-    # Accept challenge if token matches or during sandbox/development
     if hub_mode == "subscribe" and hub_challenge:
+        expected_token = settings.WHATSAPP_VERIFY_TOKEN
+        if expected_token and hub_verify_token != expected_token:
+            logger.warning("Rejected Meta webhook verification with invalid token.")
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Invalid verification token"
+            )
         logger.info("Meta WhatsApp Webhook subscription verified successfully.")
         return Response(content=hub_challenge, media_type="text/plain")
     return {"status": "WSFU WhatsApp Webhook Active"}
@@ -45,16 +50,28 @@ async def verify_meta_webhook(
 @router.post("/webhook")
 async def handle_whatsapp_webhook(request: Request):
     """
-    Handles incoming WhatsApp messages from Twilio or Meta Cloud API.
+    Handles incoming WhatsApp messages from Twilio or Meta Cloud API with HMAC signature verification.
     """
     content_type = request.headers.get("content-type", "").lower()
+    raw_body = await request.body()
+
+    # Verify Meta HMAC Signature if APP_SECRET is configured
+    meta_sig = request.headers.get("X-Hub-Signature-256")
+    if settings.WHATSAPP_APP_SECRET and meta_sig:
+        expected_sig = "sha256=" + hmac.new(settings.WHATSAPP_APP_SECRET.encode("utf-8"), raw_body, hashlib.sha256).hexdigest()
+        if not hmac.compare_digest(meta_sig, expected_sig):
+            logger.warning("Invalid X-Hub-Signature-256 on WhatsApp webhook.")
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid webhook signature")
+
     incoming_text = ""
     sender = ""
 
     try:
         if "application/json" in content_type:
             # Meta Cloud API JSON payload
-            body = await request.json()
+            import json
+            body = json.loads(raw_body.decode("utf-8")) if raw_body else {}
+
             entry = body.get("entry", [{}])[0]
             changes = entry.get("changes", [{}])[0]
             value = changes.get("value", {})

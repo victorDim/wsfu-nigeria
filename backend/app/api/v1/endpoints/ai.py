@@ -4,8 +4,9 @@ FastAPI Endpoints for WSFU AI Intelligence Suite
 
 import logging
 from typing import Dict, Any, List, Optional
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, Request, status
 from pydantic import BaseModel, Field
+from app.core.limiter import limiter
 from app.services.ai_intelligence import (
     ask_civic_assistant,
     cross_examine_article,
@@ -35,7 +36,8 @@ class PolishFOIRequest(BaseModel):
 
 
 @router.post("/ask", summary="Ask the WSFU AI Civic Assistant")
-async def handle_ask_civic_assistant(payload: AskAIRequest):
+@limiter.limit("30/minute")
+async def handle_ask_civic_assistant(request: Request, payload: AskAIRequest):
     """
     RAG-grounded conversational AI for budgets, FAAC revenues, government promises, and legal provisions.
     """
@@ -51,7 +53,8 @@ async def handle_ask_civic_assistant(payload: AskAIRequest):
 
 
 @router.post("/cross-examine", summary="Forensic AI Cross-Examination of News Article")
-async def handle_cross_examine_article(payload: CrossExamineRequest):
+@limiter.limit("20/minute")
+async def handle_cross_examine_article(request: Request, payload: CrossExamineRequest):
     """
     Analyzes an article for verified facts vs unverified claims, missing context, and bias score.
     """
@@ -72,7 +75,8 @@ async def handle_cross_examine_article(payload: CrossExamineRequest):
 
 
 @router.post("/polish-foi", summary="AI Polish for Statutory Freedom of Information Notice")
-async def handle_polish_foi_letter(payload: PolishFOIRequest):
+@limiter.limit("20/minute")
+async def handle_polish_foi_letter(request: Request, payload: PolishFOIRequest):
     """
     Translates rough citizen observations into formal statutory legal notice text.
     """
@@ -89,3 +93,4 @@ async def handle_polish_foi_letter(payload: PolishFOIRequest):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to polish FOI letter."
         )
+

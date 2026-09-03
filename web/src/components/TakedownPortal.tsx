@@ -10,13 +10,15 @@ export const TakedownPortal: React.FC = () => {
   const [reason, setReason] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSubmitError(null);
     if (name && email && url && reason) {
       setSubmitting(true);
       try {
-        await supabase.from('takedown_requests').insert({
+        const { error } = await supabase.from('takedown_requests').insert({
           requester_name: name,
           requester_email: email,
           organization: org || null,
@@ -24,14 +26,18 @@ export const TakedownPortal: React.FC = () => {
           reason: reason,
           status: 'pending'
         });
-      } catch (err) {
-        console.warn('Could not record to Supabase, handled locally', err);
+        if (error) {
+          throw error;
+        }
+        setSubmitted(true);
+      } catch (err: any) {
+        setSubmitError(err?.message || 'Unable to submit dispute notice. Please verify network connection and try again.');
       } finally {
         setSubmitting(false);
-        setSubmitted(true);
       }
     }
   };
+
 
   return (
     <div className="max-w-3xl mx-auto space-y-6 py-4">
@@ -56,7 +62,13 @@ export const TakedownPortal: React.FC = () => {
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 space-y-4">
+          {submitError && (
+            <div className="bg-rose-950/60 border border-rose-800 rounded-xl p-3 text-xs text-rose-300 font-medium">
+              ⚠️ {submitError}
+            </div>
+          )}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
             <div>
               <label className="block text-xs font-bold text-zinc-300 mb-1">Authorized Representative Name</label>
               <input

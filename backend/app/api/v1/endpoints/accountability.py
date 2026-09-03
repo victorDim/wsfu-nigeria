@@ -4,11 +4,11 @@ Accountability Endpoints: Political Promise Tracker & FOI Request Manager
 
 import uuid
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timezone, timedelta
 from typing import Optional, List, Dict, Any
-from fastapi import APIRouter, Query, HTTPException
+from fastapi import APIRouter, Query, HTTPException, Request
 from pydantic import BaseModel, Field
-
+from app.core.limiter import limiter
 from app.db.supabase_client import get_supabase, get_supabase_admin
 
 logger = logging.getLogger("wsfu.accountability")
@@ -45,9 +45,8 @@ def list_promises(
         res = q.order("date_made", desc=True).range(offset, offset + limit - 1).execute()
         return res.data or []
     except Exception as e:
-        logger.warning(f"Error querying tracked_promises, attempting fallback: {e}")
+        logger.warning(f"Error querying tracked_promises: {e}")
         try:
-            # Fallback to legacy table if migration 007 not yet applied
             legacy_q = supabase.table("promises").select("*, states(name, code)")
             if status:
                 legacy_q = legacy_q.eq("status", status)
@@ -78,11 +77,12 @@ def list_foi_requests(
 
 
 @router.post("/foi")
-def create_foi_request(data: FOIRequestCreate) -> Dict[str, Any]:
+@limiter.limit("10/minute")
+def create_foi_request(request: Request, data: FOIRequestCreate) -> Dict[str, Any]:
     """
     Generates a formal FOI tracking record and statutory tracking code under Section 1 FOI Act 2011.
     """
-    today = datetime.utcnow().date()
+    today = datetime.now(timezone.utc).date()
     due_date = today + timedelta(days=7)
     today_str = today.isoformat()
     due_str = due_date.isoformat()
@@ -113,6 +113,7 @@ def create_foi_request(data: FOIRequestCreate) -> Dict[str, Any]:
             "details": data.details,
             "date_filed": today_str,
             "due_date": due_str,
+
             "status": "submitted",
             "legal_notice": "Statutory 7-working-day compliance clock commenced pursuant to Section 4 FOI Act 2011."
         }
